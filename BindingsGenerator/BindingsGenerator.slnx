@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="Resonite.UnitySDK.BindingGenerator/Resonite.UnitySDK.BindingGenerator.csproj" />
-  <Project Path="Resonite.UnitySDK.Core/Resonite.UnitySDK.Core.csproj" />
-  <Project Path="Resonite.UnitySDK.Bindings/Resonite.UnitySDK.Bindings.csproj" />
+  <Project Path="Resonite.UnitySDK.BindingGenerator/Resonite.UnitySDK.BindingGenerator.csproj" Id="34703c34-c86c-4dd9-85df-7d0559823f70" />
+  <Project Path="Resonite.UnitySDK.Bindings/Resonite.UnitySDK.Bindings.csproj" Id="7322fe36-0ea7-45cb-829b-551d822b9068" />
+  <Project Path="Resonite.UnitySDK.Core/Resonite.UnitySDK.Core.csproj" Id="53a1410e-7629-49b1-8cec-313bfce05e15" />
 </Solution>
