@@ -13,13 +13,13 @@ using UnityEngine;
 
 public partial class ResoniteBindingGenerator
 {
-    public async Task<string> GenerateBody(Dictionary<string, MemberDefinition> members, TypeDefinition containerType)
+    public async Task<string> GenerateBody(WorkerDefinition worker, TypeDefinition containerType)
     {
         var str = new StringBuilder();
 
         var quickAccessMembers = new HashSet<string>();
 
-        foreach(var member in members)
+        foreach (var member in worker.Members)
         {
             var hasQuickAccess = await GenerateMemberQuickAccess(str, member.Key, member.Value, containerType);
 
@@ -29,7 +29,7 @@ public partial class ResoniteBindingGenerator
             str.Append("public ");
             await GenerateMemberDeclaration(str, member.Value, containerType);
 
-            if(hasQuickAccess)
+            if (hasQuickAccess)
                 str.AppendLine($" {member.Key}_Element = new();");
             else
                 str.AppendLine($" {member.Key} = new();");
@@ -43,7 +43,7 @@ public partial class ResoniteBindingGenerator
     base.CollectMembers(members, context);");
 
         // Generate the data conversion for the members
-        foreach (var member in members)
+        foreach (var member in worker.Members)
         {
             var hasQuickAccess = quickAccessMembers.Contains(member.Key);
 
@@ -54,12 +54,17 @@ public partial class ResoniteBindingGenerator
 
         str.AppendLine("}");
 
+        // Sync methods
+        if (worker.Methods != null)
+            foreach (var method in worker.Methods)
+                await GenerateMethod(str, method, containerType);
+
         return str.ToString();
     }
 
     async Task<bool> GenerateMemberQuickAccess(StringBuilder str, string name, MemberDefinition member, TypeDefinition containerType)
     {
-        switch(member)
+        switch (member)
         {
             case FieldDefinition field:
                 var valueDec = await GenerateTypeDeclaration(field.ValueType, containerType);
@@ -123,7 +128,7 @@ public partial class ResoniteBindingGenerator
 
     async Task GenerateMemberCollection(StringBuilder str, string name, MemberDefinition member, TypeDefinition containerType)
     {
-        switch(member)
+        switch (member)
         {
             case FieldDefinition field:
                 await GenerateFieldCollection(str, name, field, containerType);
@@ -202,7 +207,7 @@ public partial class ResoniteBindingGenerator
     {
         var memberTypeDec = await GenerateTypeDeclaration(list.Type, containerType);
 
-        switch(list.ElementDefinition)
+        switch (list.ElementDefinition)
         {
             case FieldDefinition field:
                 var valueDec = await GenerateTypeDeclaration(field.ValueType, containerType);
@@ -284,7 +289,7 @@ public partial class ResoniteBindingGenerator
 
             return await FullyQualifyType(typeDefinition, type.GenericArguments, containerType.FullTypeName);
         }
-        catch(System.Exception ex)
+        catch (System.Exception ex)
         {
             throw new System.Exception($"Failed to qualify type declaration: {type.Type}\nOn container: {containerType.FullTypeName}\n" +
                 $"Error: {ex}");
@@ -333,6 +338,129 @@ public partial class ResoniteBindingGenerator
     async Task GenerateSyncObjectCollection(StringBuilder str, string name, SyncObjectMemberDefinition syncObject, TypeDefinition containerType)
     {
         str.Append(@$"{name}.ToLinkSyncObject(context)");
+    }
+
+    #endregion
+
+    #region SYNC METHODS
+
+    async Task<bool> IsSupportedForSyncMethods(TypeReference type)
+    {
+        // We don't support generic parameters in methods right now
+        if (type.IsGenericParameter)
+            return false;
+
+        if (type.Type == "void")
+            return true;
+
+        var typeDef = await GetTypeDefinition(type.Type);
+
+        if (typeDef.IsEnginePrimitive)
+            return true;
+
+        if (typeDef.IsWorldElement)
+            return true;
+
+        return false;
+    }
+
+    public async Task GenerateMethod(StringBuilder str, SyncMethodDefinition method, TypeDefinition containerType)
+    {
+        // Check if we support this method
+        if (!await IsSupportedForSyncMethods(method.ReturnType))
+            return;
+
+        foreach (var parameter in method.Parameters)
+            if (!await IsSupportedForSyncMethods(parameter.Value))
+                return;        
+
+        string returnTypeDec;
+        string returnDec;
+
+        if (method.ReturnType.Type == "void")
+        {
+            returnTypeDec = null;
+            returnDec = "System.Threading.Tasks.Task";
+        }
+        else
+        {
+            returnTypeDec = await GenerateTypeDeclaration(method.ReturnType, containerType);
+            returnDec = $"System.Threading.Tasks.Task<{returnTypeDec}>";
+        }
+
+        str.Append($"public {(method.IsStatic ? "static" : "")} async {returnDec} {method.Name}(");
+
+        // Generate parameters
+        bool isFirst = true;
+
+        foreach (var parameter in method.Parameters)
+        {
+            var paramDec = await GenerateTypeDeclaration(parameter.Value, containerType);
+
+            if (isFirst)
+                isFirst = false;
+            else
+                str.Append(", ");
+
+            str.Append(paramDec);
+            str.Append(" ");
+            str.Append(parameter.Key);
+        }
+
+        if (!isFirst)
+            str.Append(", ");
+
+        // We need to pass the context so it can actually send the messages and resolve IDs
+        str.Append("IConversionContext context");
+
+        str.AppendLine(")");
+
+        // Generate body to collect the parameters
+        // First initiate the message
+        str.AppendLine(@$"{{
+        var __message = new ResoniteLink.Call{(method.IsStatic ? "Static" : "")}SyncMethod();");
+
+        if (method.IsStatic)
+            str.AppendLine($"__message.TargetType = \"{containerType.FullTypeName}\";");
+        else
+            str.AppendLine(@"__message.TargetID = context.GetId(this);
+                if(__message.TargetID == null)
+                    throw new System.InvalidOperationException(""Cannot call sync methods on objects that have not been synced to resonite yet."");");
+
+        // Collect all the parameters
+        foreach (var parameter in method.Parameters)
+        {
+            str.Append($"__message.Arguments.Add(\"{parameter.Key}\", ");
+
+            var paramTypeDefinition = await GetTypeDefinition(parameter.Value.Type);
+
+            if (paramTypeDefinition.IsEnginePrimitive)
+                str.Append($"{parameter.Key}.ToData()");
+            else
+                str.Append($"new ResoniteLink.Data_Reference() {{ TargetID = context.GetId({parameter.Key}) }}");
+
+            str.AppendLine(");");
+        }
+
+        // Call it!
+        str.AppendLine(@"var result = await context.CallMethod(__message);
+        if(!result.Success)
+            throw new Exception(""Error running method: "" + result.ErrorInfo);");
+
+        if (returnTypeDec != null)
+        {
+            // Now we need to pass the result
+            var returnTypeDef = await GetTypeDefinition(method.ReturnType.Type);
+
+            if (returnTypeDef.IsEnginePrimitive)
+                str.AppendLine($"return ((ResoniteLink.Data_{method.ReturnType.Type})result.Result).Value;");
+            else
+                str.AppendLine($@"var resultId = ((ResoniteLink.Data_Reference)result.Result).TargetID;
+return context.TryResolveId(resultId) as {returnTypeDec};");
+        }
+
+        str.AppendLine("}");
+        str.AppendLine();
     }
 
     #endregion

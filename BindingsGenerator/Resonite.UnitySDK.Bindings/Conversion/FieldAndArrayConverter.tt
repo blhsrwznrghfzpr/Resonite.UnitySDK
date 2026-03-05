@@ -319,5 +319,59 @@ public static class FieldArrayConverter
         throw new NotSupportedException($"Unsupported key type: {typeof(TKey).FullName}");
     }
 
+    public static ResoniteLink.DataValue ToData<T>(this T value)
+    {
+        var type = typeof(T);
+
+        // Unity Primitives (and our extensions)
+        <#
+        foreach(var type in unityPrimitives)
+        {
+            #>
+            if(value is UnityEngine.<#=type#> value_<#=type#>)
+                return value_<#=type#>.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.<#=type#>?))
+            {
+                var convertedValue = (value as UnityEngine.<#=type#>?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+            <#
+        }
+        #>
+
+        // All other primitives
+        <#
+        foreach(var type in primitiveTypes)
+        {
+            #>
+            if(type == typeof(<#=type#>))
+            {
+                var data = new Data_<#=type#>();
+                data.BoxedValue = value;
+                return data;
+            }
+
+            <#
+            if(!nonNullableTypes.Contains(type))
+            {
+                #>                
+                if(type == typeof(<#=type#>?))
+                {
+                    var data = new Data_Nullable_<#=type#>();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                <#
+            }
+            #>
+
+            <#
+        }
+        #>
+                
+        throw new NotSupportedException($"Unsupported value type: {typeof(T).FullName}");
+    }
+
     static KeyValuePair<TKey, TElement> CreatePair<TKey, TElement>(TKey key, TElement element) => new KeyValuePair<TKey, TElement>(key, element);
 }

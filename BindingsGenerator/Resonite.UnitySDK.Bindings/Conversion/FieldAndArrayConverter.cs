@@ -2592,5 +2592,1330 @@ public static class FieldArrayConverter
         throw new NotSupportedException($"Unsupported key type: {typeof(TKey).FullName}");
     }
 
+    public static ResoniteLink.DataValue ToData<T>(this T value)
+    {
+        var type = typeof(T);
+
+        // Unity Primitives (and our extensions)
+                    if(value is UnityEngine.Vector2 value_Vector2)
+                return value_Vector2.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector2?))
+            {
+                var convertedValue = (value as UnityEngine.Vector2?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector3 value_Vector3)
+                return value_Vector3.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector3?))
+            {
+                var convertedValue = (value as UnityEngine.Vector3?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector4 value_Vector4)
+                return value_Vector4.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector4?))
+            {
+                var convertedValue = (value as UnityEngine.Vector4?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Quaternion value_Quaternion)
+                return value_Quaternion.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Quaternion?))
+            {
+                var convertedValue = (value as UnityEngine.Quaternion?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector2Int value_Vector2Int)
+                return value_Vector2Int.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector2Int?))
+            {
+                var convertedValue = (value as UnityEngine.Vector2Int?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector3Int value_Vector3Int)
+                return value_Vector3Int.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector3Int?))
+            {
+                var convertedValue = (value as UnityEngine.Vector3Int?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Matrix4x4 value_Matrix4x4)
+                return value_Matrix4x4.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Matrix4x4?))
+            {
+                var convertedValue = (value as UnityEngine.Matrix4x4?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Color value_Color)
+                return value_Color.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Color?))
+            {
+                var convertedValue = (value as UnityEngine.Color?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Color32 value_Color32)
+                return value_Color32.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Color32?))
+            {
+                var convertedValue = (value as UnityEngine.Color32?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Rect value_Rect)
+                return value_Rect.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Rect?))
+            {
+                var convertedValue = (value as UnityEngine.Rect?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.RectInt value_RectInt)
+                return value_RectInt.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.RectInt?))
+            {
+                var convertedValue = (value as UnityEngine.RectInt?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Bounds value_Bounds)
+                return value_Bounds.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Bounds?))
+            {
+                var convertedValue = (value as UnityEngine.Bounds?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.QuaternionDouble value_QuaternionDouble)
+                return value_QuaternionDouble.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.QuaternionDouble?))
+            {
+                var convertedValue = (value as UnityEngine.QuaternionDouble?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.ColorX value_ColorX)
+                return value_ColorX.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.ColorX?))
+            {
+                var convertedValue = (value as UnityEngine.ColorX?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector2Bool value_Vector2Bool)
+                return value_Vector2Bool.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector2Bool?))
+            {
+                var convertedValue = (value as UnityEngine.Vector2Bool?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector3Bool value_Vector3Bool)
+                return value_Vector3Bool.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector3Bool?))
+            {
+                var convertedValue = (value as UnityEngine.Vector3Bool?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector4Bool value_Vector4Bool)
+                return value_Vector4Bool.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector4Bool?))
+            {
+                var convertedValue = (value as UnityEngine.Vector4Bool?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector2Byte value_Vector2Byte)
+                return value_Vector2Byte.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector2Byte?))
+            {
+                var convertedValue = (value as UnityEngine.Vector2Byte?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector3Byte value_Vector3Byte)
+                return value_Vector3Byte.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector3Byte?))
+            {
+                var convertedValue = (value as UnityEngine.Vector3Byte?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector4Byte value_Vector4Byte)
+                return value_Vector4Byte.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector4Byte?))
+            {
+                var convertedValue = (value as UnityEngine.Vector4Byte?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector2Ushort value_Vector2Ushort)
+                return value_Vector2Ushort.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector2Ushort?))
+            {
+                var convertedValue = (value as UnityEngine.Vector2Ushort?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector3Ushort value_Vector3Ushort)
+                return value_Vector3Ushort.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector3Ushort?))
+            {
+                var convertedValue = (value as UnityEngine.Vector3Ushort?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector4Ushort value_Vector4Ushort)
+                return value_Vector4Ushort.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector4Ushort?))
+            {
+                var convertedValue = (value as UnityEngine.Vector4Ushort?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector2Uint value_Vector2Uint)
+                return value_Vector2Uint.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector2Uint?))
+            {
+                var convertedValue = (value as UnityEngine.Vector2Uint?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector3Uint value_Vector3Uint)
+                return value_Vector3Uint.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector3Uint?))
+            {
+                var convertedValue = (value as UnityEngine.Vector3Uint?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector4Uint value_Vector4Uint)
+                return value_Vector4Uint.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector4Uint?))
+            {
+                var convertedValue = (value as UnityEngine.Vector4Uint?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector2Ulong value_Vector2Ulong)
+                return value_Vector2Ulong.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector2Ulong?))
+            {
+                var convertedValue = (value as UnityEngine.Vector2Ulong?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector3Ulong value_Vector3Ulong)
+                return value_Vector3Ulong.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector3Ulong?))
+            {
+                var convertedValue = (value as UnityEngine.Vector3Ulong?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector4Ulong value_Vector4Ulong)
+                return value_Vector4Ulong.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector4Ulong?))
+            {
+                var convertedValue = (value as UnityEngine.Vector4Ulong?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector2Sbyte value_Vector2Sbyte)
+                return value_Vector2Sbyte.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector2Sbyte?))
+            {
+                var convertedValue = (value as UnityEngine.Vector2Sbyte?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector3Sbyte value_Vector3Sbyte)
+                return value_Vector3Sbyte.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector3Sbyte?))
+            {
+                var convertedValue = (value as UnityEngine.Vector3Sbyte?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector4Sbyte value_Vector4Sbyte)
+                return value_Vector4Sbyte.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector4Sbyte?))
+            {
+                var convertedValue = (value as UnityEngine.Vector4Sbyte?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector2Short value_Vector2Short)
+                return value_Vector2Short.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector2Short?))
+            {
+                var convertedValue = (value as UnityEngine.Vector2Short?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector3Short value_Vector3Short)
+                return value_Vector3Short.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector3Short?))
+            {
+                var convertedValue = (value as UnityEngine.Vector3Short?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector4Short value_Vector4Short)
+                return value_Vector4Short.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector4Short?))
+            {
+                var convertedValue = (value as UnityEngine.Vector4Short?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector2Long value_Vector2Long)
+                return value_Vector2Long.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector2Long?))
+            {
+                var convertedValue = (value as UnityEngine.Vector2Long?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector3Long value_Vector3Long)
+                return value_Vector3Long.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector3Long?))
+            {
+                var convertedValue = (value as UnityEngine.Vector3Long?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector4Long value_Vector4Long)
+                return value_Vector4Long.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector4Long?))
+            {
+                var convertedValue = (value as UnityEngine.Vector4Long?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector2Double value_Vector2Double)
+                return value_Vector2Double.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector2Double?))
+            {
+                var convertedValue = (value as UnityEngine.Vector2Double?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector3Double value_Vector3Double)
+                return value_Vector3Double.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector3Double?))
+            {
+                var convertedValue = (value as UnityEngine.Vector3Double?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Vector4Double value_Vector4Double)
+                return value_Vector4Double.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Vector4Double?))
+            {
+                var convertedValue = (value as UnityEngine.Vector4Double?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Matrix2x2 value_Matrix2x2)
+                return value_Matrix2x2.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Matrix2x2?))
+            {
+                var convertedValue = (value as UnityEngine.Matrix2x2?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Matrix3x3 value_Matrix3x3)
+                return value_Matrix3x3.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Matrix3x3?))
+            {
+                var convertedValue = (value as UnityEngine.Matrix3x3?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Matrix2x2Double value_Matrix2x2Double)
+                return value_Matrix2x2Double.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Matrix2x2Double?))
+            {
+                var convertedValue = (value as UnityEngine.Matrix2x2Double?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Matrix3x3Double value_Matrix3x3Double)
+                return value_Matrix3x3Double.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Matrix3x3Double?))
+            {
+                var convertedValue = (value as UnityEngine.Matrix3x3Double?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Matrix4x4Double value_Matrix4x4Double)
+                return value_Matrix4x4Double.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Matrix4x4Double?))
+            {
+                var convertedValue = (value as UnityEngine.Matrix4x4Double?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+            
+        // All other primitives
+                    if(type == typeof(byte))
+            {
+                var data = new Data_byte();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(byte?))
+                {
+                    var data = new Data_Nullable_byte();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(ushort))
+            {
+                var data = new Data_ushort();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(ushort?))
+                {
+                    var data = new Data_Nullable_ushort();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(uint))
+            {
+                var data = new Data_uint();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(uint?))
+                {
+                    var data = new Data_Nullable_uint();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(ulong))
+            {
+                var data = new Data_ulong();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(ulong?))
+                {
+                    var data = new Data_Nullable_ulong();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(sbyte))
+            {
+                var data = new Data_sbyte();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(sbyte?))
+                {
+                    var data = new Data_Nullable_sbyte();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(short))
+            {
+                var data = new Data_short();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(short?))
+                {
+                    var data = new Data_Nullable_short();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(int))
+            {
+                var data = new Data_int();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(int?))
+                {
+                    var data = new Data_Nullable_int();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(long))
+            {
+                var data = new Data_long();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(long?))
+                {
+                    var data = new Data_Nullable_long();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(float))
+            {
+                var data = new Data_float();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(float?))
+                {
+                    var data = new Data_Nullable_float();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(double))
+            {
+                var data = new Data_double();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(double?))
+                {
+                    var data = new Data_Nullable_double();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(decimal))
+            {
+                var data = new Data_decimal();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(decimal?))
+                {
+                    var data = new Data_Nullable_decimal();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(bool))
+            {
+                var data = new Data_bool();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(bool?))
+                {
+                    var data = new Data_Nullable_bool();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(char))
+            {
+                var data = new Data_char();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(char?))
+                {
+                    var data = new Data_Nullable_char();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(string))
+            {
+                var data = new Data_string();
+                data.BoxedValue = value;
+                return data;
+            }
+
+            
+                        if(type == typeof(Uri))
+            {
+                var data = new Data_Uri();
+                data.BoxedValue = value;
+                return data;
+            }
+
+            
+                        if(type == typeof(DateTime))
+            {
+                var data = new Data_DateTime();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(DateTime?))
+                {
+                    var data = new Data_Nullable_DateTime();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(TimeSpan))
+            {
+                var data = new Data_TimeSpan();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(TimeSpan?))
+                {
+                    var data = new Data_Nullable_TimeSpan();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(color))
+            {
+                var data = new Data_color();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(color?))
+                {
+                    var data = new Data_Nullable_color();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(colorX))
+            {
+                var data = new Data_colorX();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(colorX?))
+                {
+                    var data = new Data_Nullable_colorX();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(color32))
+            {
+                var data = new Data_color32();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(color32?))
+                {
+                    var data = new Data_Nullable_color32();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(Rect))
+            {
+                var data = new Data_Rect();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(Rect?))
+                {
+                    var data = new Data_Nullable_Rect();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(IntRect))
+            {
+                var data = new Data_IntRect();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(IntRect?))
+                {
+                    var data = new Data_Nullable_IntRect();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(BoundingBox))
+            {
+                var data = new Data_BoundingBox();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(BoundingBox?))
+                {
+                    var data = new Data_Nullable_BoundingBox();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(float2))
+            {
+                var data = new Data_float2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(float2?))
+                {
+                    var data = new Data_Nullable_float2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(double2))
+            {
+                var data = new Data_double2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(double2?))
+                {
+                    var data = new Data_Nullable_double2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(byte2))
+            {
+                var data = new Data_byte2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(byte2?))
+                {
+                    var data = new Data_Nullable_byte2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(ushort2))
+            {
+                var data = new Data_ushort2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(ushort2?))
+                {
+                    var data = new Data_Nullable_ushort2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(uint2))
+            {
+                var data = new Data_uint2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(uint2?))
+                {
+                    var data = new Data_Nullable_uint2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(ulong2))
+            {
+                var data = new Data_ulong2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(ulong2?))
+                {
+                    var data = new Data_Nullable_ulong2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(sbyte2))
+            {
+                var data = new Data_sbyte2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(sbyte2?))
+                {
+                    var data = new Data_Nullable_sbyte2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(short2))
+            {
+                var data = new Data_short2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(short2?))
+                {
+                    var data = new Data_Nullable_short2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(int2))
+            {
+                var data = new Data_int2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(int2?))
+                {
+                    var data = new Data_Nullable_int2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(long2))
+            {
+                var data = new Data_long2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(long2?))
+                {
+                    var data = new Data_Nullable_long2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(bool2))
+            {
+                var data = new Data_bool2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(bool2?))
+                {
+                    var data = new Data_Nullable_bool2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(float3))
+            {
+                var data = new Data_float3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(float3?))
+                {
+                    var data = new Data_Nullable_float3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(double3))
+            {
+                var data = new Data_double3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(double3?))
+                {
+                    var data = new Data_Nullable_double3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(byte3))
+            {
+                var data = new Data_byte3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(byte3?))
+                {
+                    var data = new Data_Nullable_byte3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(ushort3))
+            {
+                var data = new Data_ushort3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(ushort3?))
+                {
+                    var data = new Data_Nullable_ushort3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(uint3))
+            {
+                var data = new Data_uint3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(uint3?))
+                {
+                    var data = new Data_Nullable_uint3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(ulong3))
+            {
+                var data = new Data_ulong3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(ulong3?))
+                {
+                    var data = new Data_Nullable_ulong3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(sbyte3))
+            {
+                var data = new Data_sbyte3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(sbyte3?))
+                {
+                    var data = new Data_Nullable_sbyte3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(short3))
+            {
+                var data = new Data_short3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(short3?))
+                {
+                    var data = new Data_Nullable_short3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(int3))
+            {
+                var data = new Data_int3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(int3?))
+                {
+                    var data = new Data_Nullable_int3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(long3))
+            {
+                var data = new Data_long3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(long3?))
+                {
+                    var data = new Data_Nullable_long3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(bool3))
+            {
+                var data = new Data_bool3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(bool3?))
+                {
+                    var data = new Data_Nullable_bool3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(float4))
+            {
+                var data = new Data_float4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(float4?))
+                {
+                    var data = new Data_Nullable_float4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(double4))
+            {
+                var data = new Data_double4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(double4?))
+                {
+                    var data = new Data_Nullable_double4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(byte4))
+            {
+                var data = new Data_byte4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(byte4?))
+                {
+                    var data = new Data_Nullable_byte4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(ushort4))
+            {
+                var data = new Data_ushort4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(ushort4?))
+                {
+                    var data = new Data_Nullable_ushort4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(uint4))
+            {
+                var data = new Data_uint4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(uint4?))
+                {
+                    var data = new Data_Nullable_uint4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(ulong4))
+            {
+                var data = new Data_ulong4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(ulong4?))
+                {
+                    var data = new Data_Nullable_ulong4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(sbyte4))
+            {
+                var data = new Data_sbyte4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(sbyte4?))
+                {
+                    var data = new Data_Nullable_sbyte4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(short4))
+            {
+                var data = new Data_short4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(short4?))
+                {
+                    var data = new Data_Nullable_short4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(int4))
+            {
+                var data = new Data_int4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(int4?))
+                {
+                    var data = new Data_Nullable_int4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(long4))
+            {
+                var data = new Data_long4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(long4?))
+                {
+                    var data = new Data_Nullable_long4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(bool4))
+            {
+                var data = new Data_bool4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(bool4?))
+                {
+                    var data = new Data_Nullable_bool4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(floatQ))
+            {
+                var data = new Data_floatQ();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(floatQ?))
+                {
+                    var data = new Data_Nullable_floatQ();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(doubleQ))
+            {
+                var data = new Data_doubleQ();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(doubleQ?))
+                {
+                    var data = new Data_Nullable_doubleQ();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(float2x2))
+            {
+                var data = new Data_float2x2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(float2x2?))
+                {
+                    var data = new Data_Nullable_float2x2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(double2x2))
+            {
+                var data = new Data_double2x2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(double2x2?))
+                {
+                    var data = new Data_Nullable_double2x2();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(float3x3))
+            {
+                var data = new Data_float3x3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(float3x3?))
+                {
+                    var data = new Data_Nullable_float3x3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(double3x3))
+            {
+                var data = new Data_double3x3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(double3x3?))
+                {
+                    var data = new Data_Nullable_double3x3();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(float4x4))
+            {
+                var data = new Data_float4x4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(float4x4?))
+                {
+                    var data = new Data_Nullable_float4x4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                        if(type == typeof(double4x4))
+            {
+                var data = new Data_double4x4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+                            
+                if(type == typeof(double4x4?))
+                {
+                    var data = new Data_Nullable_double4x4();
+                    data.BoxedValue = value;
+                    return data;
+                }
+                
+                            
+        throw new NotSupportedException($"Unsupported value type: {typeof(T).FullName}");
+    }
+
     static KeyValuePair<TKey, TElement> CreatePair<TKey, TElement>(TKey key, TElement element) => new KeyValuePair<TKey, TElement>(key, element);
 }

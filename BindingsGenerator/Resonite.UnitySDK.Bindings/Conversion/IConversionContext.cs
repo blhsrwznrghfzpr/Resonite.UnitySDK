@@ -1,4 +1,6 @@
 using FrooxEngine;
+using ResoniteLink;
+using System.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,6 +16,7 @@ public interface IConversionContext
     string GetIdOrAllocate(IWorldElement o);
     string GetIdOrAllocate(IWorldElement o, out bool allocated);
     void RemoveId(IWorldElement o);
+    IWorldElement TryResolveId(string id);
 
     #endregion
 
@@ -28,5 +31,11 @@ public interface IConversionContext
     IAssetProvider<FrooxEngine.AudioClip> GetAudioClip(UnityEngine.AudioClip audioClip);
 
     #endregion
+
+    #region METHOD CALLS
+
+    Task<MethodResult> CallMethod(CallSyncMethod request);
+    Task<MethodResult> CallMethod(CallStaticSyncMethod request);
+
+    #endregion
 }
- 
