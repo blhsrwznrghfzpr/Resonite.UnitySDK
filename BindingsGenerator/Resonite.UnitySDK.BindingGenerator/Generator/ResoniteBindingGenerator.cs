@@ -34,6 +34,8 @@ public partial class ResoniteBindingGenerator
     Dictionary<string, TypeDefinition> _typeDefinitionCache = new Dictionary<string, TypeDefinition>();
     HashSet<string> _generatedTypes = new HashSet<string>();
 
+    HashSet<string> _oldFilesToRemove;
+
     string _resoniteVersion;
     string _resoniteLinkVersion;
 
@@ -51,12 +53,11 @@ public partial class ResoniteBindingGenerator
 
             Console.WriteLine("Starting generation");
 
-            // Delete previous bindings, since we'll regenerate everything
-            if (Directory.Exists(TargetPath))
-            {
-                Console.WriteLine("Deleting old bindings");
-                Directory.Delete(TargetPath, true);
-            }
+            // Get list of all the existing files
+            // We'll keep track of which ones were supposed to be generated and then we delete the rest
+            Console.WriteLine("Gathering old bindings");
+
+            _oldFilesToRemove = Directory.EnumerateFiles(TargetPath, "*.cs", SearchOption.AllDirectories).ToHashSet();
 
             var sessionInfo = await link.GetSessionData();
 
@@ -65,6 +66,13 @@ public partial class ResoniteBindingGenerator
 
             // Start generating bindings from the root category. This will work downwards recursively, covering all the component types
             await GenerateComponentBindingsForCategory("");
+
+            Console.WriteLine("Deleting old bindings");
+
+            foreach (var file in _oldFilesToRemove)
+                File.Delete(file);
+
+            _oldFilesToRemove = null;
         }
         catch (System.Exception ex)
         {
@@ -125,9 +133,12 @@ public partial class ResoniteBindingGenerator
 
         var path = Path.Combine(directory, name);
 
+        // Normalize the path
+        path = Path.GetFullPath(path);
+
         // Make sure we're not overwriting existing files - they should be deleted before hand
         // This makes sure there's no file-name collisions
-        if (File.Exists(path))
+        if (File.Exists(path) && !_oldFilesToRemove.Contains(path))
             throw new System.Exception($"File for {type.FullTypeName} already exists: {path}");
 
         var directoryPath = Path.GetDirectoryName(path);
@@ -192,7 +203,7 @@ public partial class ResoniteBindingGenerator
         var directoryPath = Path.Combine(TargetPath, "SyncObjects");
         var filePath = await GenerateFilePath(directoryPath, definition.Type);
 
-        File.WriteAllText(filePath, source);
+        WriteNewSource(filePath, source);
 
         // Ensure that all the base types are processed and we have files for those as well
         if (definition.BaseTypeIsSyncObject)
@@ -202,6 +213,49 @@ public partial class ResoniteBindingGenerator
 
             await GenerateComponentBinding(definition.Type.BaseType.Type);
         }
+    }
+
+    void WriteNewSource(string path, string source)
+    {
+        // We don't want to remove this file since it's about to be written
+        _oldFilesToRemove.Remove(path);
+
+        // The file already exists and there's no new changes, skip writing it
+        // This helps avoid meaningless diff where only the header metadata changes
+        if (File.Exists(path) && !ContainsNewChanges(path, source))
+            return;
+
+        File.WriteAllText(path, source);
+    }
+
+    bool ContainsNewChanges(string oldSourcePath, string newSource)
+    {
+        var oldSourceLines = File.ReadAllLines(oldSourcePath);
+
+        using (var newSourceLines = new StringReader(newSource))
+        {
+            for (int i = 0; i < oldSourceLines.Length; i++)
+            {
+                var oldLine = oldSourceLines[i];
+                var newLine = newSourceLines.ReadLine();
+
+                // If we ran out of new source lines, then old source is longer than the previous one, meaning it has new changes
+                if (newLine == null)
+                    return true;
+
+                // Ignore the comments - this will help skip the header information that is meaningless to actual changes
+                // such as the time of generation of the Resonite version
+                if (oldLine.StartsWith("//"))
+                    continue;
+
+                // Mismatch! We can stop the comparison
+                if (oldLine != newLine)
+                    return true;
+            }
+        }
+
+        // If we got here, it means all the lines match
+        return false;
     }
 
     public async Task GenerateComponentBinding(string type)
@@ -238,7 +292,7 @@ public partial class ResoniteBindingGenerator
         var directoryPath = Path.Combine(TargetPath, definition.CategoryPath?.Replace("Debug", "_Debug_") ?? "Uncategorized");
         var filePath = await GenerateFilePath(directoryPath, definition.Type);
 
-        File.WriteAllText(filePath, source);
+        WriteNewSource(filePath, source);
 
         if (!definition.Type.IsAbstract)
         {
@@ -246,7 +300,7 @@ public partial class ResoniteBindingGenerator
             var wrapperPath = await GenerateFilePath(directoryPath, definition.Type, "Wrapper");
             var wrapperSource = await GenerateWrapperSource(definition);
 
-            File.WriteAllText(wrapperPath, wrapperSource);
+            WriteNewSource(wrapperPath, wrapperSource);
         }
 
         GeneratedComponents++;
@@ -291,7 +345,7 @@ public partial class ResoniteBindingGenerator
 
         Directory.CreateDirectory(directoryPath);
 
-        File.WriteAllText(filePath, source);
+        WriteNewSource(filePath, source);
     }
 
     async Task GenerateDummyBinding(TypeDefinition type, string dependencyType)
@@ -329,7 +383,7 @@ public partial class ResoniteBindingGenerator
         var filePath = await GenerateFilePath(directoryPath, type);
 
         Directory.CreateDirectory(directoryPath);
-        File.WriteAllText(filePath, code);
+        WriteNewSource(filePath, code);
     }
 
     async Task<string> FullyQualifyType(TypeDefinition type, List<TypeReference> genericArguments, string dependencyType)
