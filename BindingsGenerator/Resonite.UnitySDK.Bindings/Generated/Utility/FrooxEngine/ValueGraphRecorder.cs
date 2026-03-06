@@ -2,9 +2,9 @@
 // -----------------------------------------------------------------------------
 // WARNING: This is auto-generated file! DO NOT MODIFY
 // Generated from type: [FrooxEngine]FrooxEngine.ValueGraphRecorder
-// Generated on: pondělí 2. března 2026 17:53:38
-// Resonite version: 2026.3.2.1000
-// Resonite Link Version: 1.0.0.0
+// Generated on: pátek 6. března 2026 14:19:12
+// Resonite version: 2026.3.5.946
+// Resonite Link Version: 0.11.0.0
 // -----------------------------------------------------------------------------
 
 using UnityEngine;
@@ -76,6 +76,18 @@ members.Add("_arrayOffsetDrive", _arrayOffsetDrive_Element.ToLinkReference(conte
 members.Add("_rangeMinDrive", _rangeMinDrive_Element.ToLinkReference(context));
 members.Add("_rangeMaxDrive", _rangeMaxDrive_Element.ToLinkReference(context));
 }
+public  async System.Threading.Tasks.Task WriteValue(IConversionContext context)
+{
+        var __message = new ResoniteLink.CallSyncMethod();
+        __message.MethodName = "WriteValue";
+__message.TargetID = context.GetId(this);
+                if(__message.TargetID == null)
+                    throw new System.InvalidOperationException("Cannot call sync methods on objects that have not been synced to resonite yet.");
+var result = await context.CallMethod(__message);
+        if(!result.Success)
+            throw new Exception("Error running method: " + result.ErrorInfo);
+}
+
 
 }
 }

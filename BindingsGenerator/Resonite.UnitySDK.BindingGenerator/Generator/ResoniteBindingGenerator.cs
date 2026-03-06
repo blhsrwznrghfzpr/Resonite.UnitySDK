@@ -648,7 +648,7 @@ namespace {type.Namespace}
     {
         CheckCancellation();
 
-        var body = await GenerateBody(definition.Members, definition.Type);
+        var body = await GenerateBody(definition, definition.Type);
 
         return await GenerateBindingSource(definition.Type, body, attributes: "[Serializable]");
     }
@@ -657,7 +657,7 @@ namespace {type.Namespace}
     {
         CheckCancellation();
 
-        var body = await GenerateBody(definition.Members, definition.Type);
+        var body = await GenerateBody(definition, definition.Type);
 
         return await GenerateBindingSource(definition.Type, body,
             attributes: "[Serializable]");

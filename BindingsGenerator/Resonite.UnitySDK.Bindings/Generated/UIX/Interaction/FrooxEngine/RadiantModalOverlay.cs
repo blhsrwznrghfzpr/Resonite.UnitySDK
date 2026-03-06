@@ -2,9 +2,9 @@
 // -----------------------------------------------------------------------------
 // WARNING: This is auto-generated file! DO NOT MODIFY
 // Generated from type: [FrooxEngine]FrooxEngine.RadiantModalOverlay
-// Generated on: pondělí 2. března 2026 17:53:32
-// Resonite version: 2026.3.2.1000
-// Resonite Link Version: 1.0.0.0
+// Generated on: pátek 6. března 2026 14:19:07
+// Resonite version: 2026.3.5.946
+// Resonite Link Version: 0.11.0.0
 // -----------------------------------------------------------------------------
 
 using UnityEngine;
@@ -83,6 +83,19 @@ members.Add("_titleOffsetMax", _titleOffsetMax_Element.ToLinkReference(context))
 members.Add("_closeOffsetMin", _closeOffsetMin_Element.ToLinkReference(context));
 members.Add("_closeOffsetMax", _closeOffsetMax_Element.ToLinkReference(context));
 }
+public static async System.Threading.Tasks.Task<global::FrooxEngine.UIX.ModalOverlay> Construct(global::FrooxEngine.Slot slot, IConversionContext context)
+{
+        var __message = new ResoniteLink.CallStaticSyncMethod();
+        __message.MethodName = "Construct";
+__message.TargetType = "[FrooxEngine]FrooxEngine.RadiantModalOverlay";
+__message.Arguments.Add("slot", new ResoniteLink.Data_Reference() { TargetID = context.GetId(slot) });
+var result = await context.CallMethod(__message);
+        if(!result.Success)
+            throw new Exception("Error running method: " + result.ErrorInfo);
+var resultId = ((ResoniteLink.Data_Reference)result.Result).TargetID;
+return context.TryResolveId(resultId) as global::FrooxEngine.UIX.ModalOverlay;
+}
+
 
 }
 }

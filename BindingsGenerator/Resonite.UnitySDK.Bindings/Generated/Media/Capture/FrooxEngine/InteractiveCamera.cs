@@ -2,9 +2,9 @@
 // -----------------------------------------------------------------------------
 // WARNING: This is auto-generated file! DO NOT MODIFY
 // Generated from type: [FrooxEngine]FrooxEngine.InteractiveCamera
-// Generated on: pondělí 2. března 2026 17:52:31
-// Resonite version: 2026.3.2.1000
-// Resonite Link Version: 1.0.0.0
+// Generated on: pátek 6. března 2026 14:18:09
+// Resonite version: 2026.3.5.946
+// Resonite Link Version: 0.11.0.0
 // -----------------------------------------------------------------------------
 
 using UnityEngine;
@@ -283,6 +283,30 @@ members.Add("_rotationDrive", _rotationDrive_Element.ToLinkReference(context));
 members.Add("_releasePosition", _releasePosition_Element.ToLinkField(context));
 members.Add("_releaseRotation", _releaseRotation_Element.ToLinkField(context));
 }
+public  async System.Threading.Tasks.Task Trigger(IConversionContext context)
+{
+        var __message = new ResoniteLink.CallSyncMethod();
+        __message.MethodName = "Trigger";
+__message.TargetID = context.GetId(this);
+                if(__message.TargetID == null)
+                    throw new System.InvalidOperationException("Cannot call sync methods on objects that have not been synced to resonite yet.");
+var result = await context.CallMethod(__message);
+        if(!result.Success)
+            throw new Exception("Error running method: " + result.ErrorInfo);
+}
+
+public  async System.Threading.Tasks.Task Capture(IConversionContext context)
+{
+        var __message = new ResoniteLink.CallSyncMethod();
+        __message.MethodName = "Capture";
+__message.TargetID = context.GetId(this);
+                if(__message.TargetID == null)
+                    throw new System.InvalidOperationException("Cannot call sync methods on objects that have not been synced to resonite yet.");
+var result = await context.CallMethod(__message);
+        if(!result.Success)
+            throw new Exception("Error running method: " + result.ErrorInfo);
+}
+
 
 }
 }

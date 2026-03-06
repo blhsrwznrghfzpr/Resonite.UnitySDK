@@ -2,9 +2,9 @@
 // -----------------------------------------------------------------------------
 // WARNING: This is auto-generated file! DO NOT MODIFY
 // Generated from type: [FrooxEngine]FrooxEngine.ProceduralMesh
-// Generated on: pondělí 2. března 2026 17:52:25
-// Resonite version: 2026.3.2.1000
-// Resonite Link Version: 1.0.0.0
+// Generated on: pátek 6. března 2026 14:18:04
+// Resonite version: 2026.3.5.946
+// Resonite Link Version: 0.11.0.0
 // -----------------------------------------------------------------------------
 
 using UnityEngine;
@@ -35,6 +35,18 @@ members.Add("OverrideBoundingBox", OverrideBoundingBox_Element.ToLinkField(conte
 members.Add("OverridenBoundingBox", OverridenBoundingBox_Element.ToLinkField(context));
 members.Add("Profile", Profile_Element.ToLinkField(context));
 }
+public  async System.Threading.Tasks.Task BakeMesh(IConversionContext context)
+{
+        var __message = new ResoniteLink.CallSyncMethod();
+        __message.MethodName = "BakeMesh";
+__message.TargetID = context.GetId(this);
+                if(__message.TargetID == null)
+                    throw new System.InvalidOperationException("Cannot call sync methods on objects that have not been synced to resonite yet.");
+var result = await context.CallMethod(__message);
+        if(!result.Success)
+            throw new Exception("Error running method: " + result.ErrorInfo);
+}
+
 
 }
 }

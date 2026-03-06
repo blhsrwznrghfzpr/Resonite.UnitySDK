@@ -2,9 +2,9 @@
 // -----------------------------------------------------------------------------
 // WARNING: This is auto-generated file! DO NOT MODIFY
 // Generated from type: [FrooxEngine]FrooxEngine.RelaySettings
-// Generated on: pondělí 2. března 2026 17:53:36
-// Resonite version: 2026.3.2.1000
-// Resonite Link Version: 1.0.0.0
+// Generated on: pátek 6. března 2026 14:19:10
+// Resonite version: 2026.3.5.946
+// Resonite Link Version: 0.11.0.0
 // -----------------------------------------------------------------------------
 
 using UnityEngine;
@@ -37,6 +37,21 @@ members.Add("UseClosestAvailableRelay", UseClosestAvailableRelay_Element.ToLinkF
 members.Add("RelayPriorities", RelayPriorities.ToLinkList(context, m => m.ToLinkSyncObject(context)));
 members.Add("RelayPrioritiesEnabled", RelayPrioritiesEnabled_Element.ToLinkField(context));
 }
+public  async System.Threading.Tasks.Task<global::FrooxEngine.SyncObject> GetEntry(global::System.String key, IConversionContext context)
+{
+        var __message = new ResoniteLink.CallSyncMethod();
+        __message.MethodName = "GetEntry";
+__message.TargetID = context.GetId(this);
+                if(__message.TargetID == null)
+                    throw new System.InvalidOperationException("Cannot call sync methods on objects that have not been synced to resonite yet.");
+__message.Arguments.Add("key", key.ToData());
+var result = await context.CallMethod(__message);
+        if(!result.Success)
+            throw new Exception("Error running method: " + result.ErrorInfo);
+var resultId = ((ResoniteLink.Data_Reference)result.Result).TargetID;
+return context.TryResolveId(resultId) as global::FrooxEngine.SyncObject;
+}
+
 
 }
 }

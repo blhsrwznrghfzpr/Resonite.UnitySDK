@@ -2,9 +2,9 @@
 // -----------------------------------------------------------------------------
 // WARNING: This is auto-generated file! DO NOT MODIFY
 // Generated from type: [FrooxEngine]FrooxEngine.HostAccessSettings+Entry
-// Generated on: pondělí 2. března 2026 17:53:34
-// Resonite version: 2026.3.2.1000
-// Resonite Link Version: 1.0.0.0
+// Generated on: pátek 6. března 2026 14:19:09
+// Resonite version: 2026.3.5.946
+// Resonite Link Version: 0.11.0.0
 // -----------------------------------------------------------------------------
 
 using UnityEngine;
@@ -68,6 +68,18 @@ members.Add("LastOSC_ReceiverRequestReason", LastOSC_ReceiverRequestReason_Eleme
 members.Add("AllowedPorts", AllowedPorts.ToLinkList(context, m => m.ToLinkField(context)));
 members.Add("BlockedPorts", BlockedPorts.ToLinkList(context, m => m.ToLinkField(context)));
 }
+public  async System.Threading.Tasks.Task Remove(IConversionContext context)
+{
+        var __message = new ResoniteLink.CallSyncMethod();
+        __message.MethodName = "Remove";
+__message.TargetID = context.GetId(this);
+                if(__message.TargetID == null)
+                    throw new System.InvalidOperationException("Cannot call sync methods on objects that have not been synced to resonite yet.");
+var result = await context.CallMethod(__message);
+        if(!result.Success)
+            throw new Exception("Error running method: " + result.ErrorInfo);
+}
+
 
 }
             }

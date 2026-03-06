@@ -2,9 +2,9 @@
 // -----------------------------------------------------------------------------
 // WARNING: This is auto-generated file! DO NOT MODIFY
 // Generated from type: [FrooxEngine]FrooxEngine.Grabbable
-// Generated on: pondělí 2. března 2026 17:53:31
-// Resonite version: 2026.3.2.1000
-// Resonite Link Version: 1.0.0.0
+// Generated on: pátek 6. března 2026 14:19:06
+// Resonite version: 2026.3.5.946
+// Resonite Link Version: 0.11.0.0
 // -----------------------------------------------------------------------------
 
 using UnityEngine;
@@ -76,6 +76,19 @@ members.Add("_lastParent", _lastParent_Element.ToLinkReference(context));
 members.Add("_lastParentIsUserSpace", _lastParentIsUserSpace_Element.ToLinkField(context));
 members.Add("__legacyActiveUserRootOnly", __legacyActiveUserRootOnly_Element.ToLinkField(context));
 }
+public static async System.Threading.Tasks.Task<global::System.Boolean> UserRootGrabCheck(global::FrooxEngine.IGrabbable grabbable, global::FrooxEngine.Grabber grabber, IConversionContext context)
+{
+        var __message = new ResoniteLink.CallStaticSyncMethod();
+        __message.MethodName = "UserRootGrabCheck";
+__message.TargetType = "[FrooxEngine]FrooxEngine.Grabbable";
+__message.Arguments.Add("grabbable", new ResoniteLink.Data_Reference() { TargetID = context.GetId(grabbable) });
+__message.Arguments.Add("grabber", new ResoniteLink.Data_Reference() { TargetID = context.GetId(grabber) });
+var result = await context.CallMethod(__message);
+        if(!result.Success)
+            throw new Exception("Error running method: " + result.ErrorInfo);
+return ((ResoniteLink.Data_bool)result.Result).Value;
+}
+
 
 }
 }
