@@ -7,7 +7,7 @@ Currently this is under heavy development and isn't ready for use yet.
 
 The code and structure is currently for quick prototyping & implementation phase and will likely move around after.
 
-We do **NOT** accept PR's / issues at this point.
+We do **NOT** accept PR's / issues at this point. Please wait for this notice to be removed.
 
 # What is this?
 Resonite is a free social VR sandbox platform, which allows for socialization and collaborative in-game building. While game content can be fully built in-game (either in desktop or VR modes), not every user prefers this workflow. Unity SDK opens a new away to build content for Resonite, by using the Unity Editor and more traditional workflow or existing tooling. 
@@ -68,7 +68,7 @@ You can also contribute in a number of other areas! Check the Issues page for th
 - Quality of life improvements
 - Help review & test PR's from other contributors 
 
-For any larger reworks **please make sure there's an issue created first**. This will help prevent conflicts with changes from other contributors.
+For any larger reworks **please make sure there's an issue created first and include high level proposal for your implementation**. This will help prevent conflicts with changes from other contributors and make any necessary design changes before spending time implementing them.
 
 If you're not sure what to contribute, check the "help wanted" issues: https://github.com/Yellow-Dog-Man/Resonite.UnitySDK/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22help%20wanted%22
 
@@ -80,6 +80,7 @@ Forking this SDK is perfectly fine! If there are popular forks with altered func
 You can also create private forks - e.g. if you want to use the SDK for your internal/private projects and use Resonite for prototyping/visualization. We have licensed this under MIT so you can use it for these use cases as well.
 
 # How it works
+There are several parts of the Unity SDK that work together to provide its functionality. In this section you can learn how the SDK is structured on high level to better understand its systems and design philosophy if you'd like to help us expanding them.
 
 ## ResoniteLink
 The Unity SDK communicates with Resonite through ResoniteLink - a websocket & JSON library that allows interacting with Resonite's data model from external applications. This library allows reading/writing Resonite data model - scene hierarchy, components and their fields. It also has functionality for importing various types of assets.
