@@ -34,7 +34,7 @@ body:
     id: what
     attributes:
       label: 'What were you trying to convert?'
-      description: 'Give us some details on which type of asset you were trying to send to Resonite, and how.'
+      description: 'Give us some details on which type of scene you were trying to send to Resonite, and how.'
     validations:
       required: true
 
