@@ -2,9 +2,9 @@
 // -----------------------------------------------------------------------------
 // WARNING: This is auto-generated file! DO NOT MODIFY
 // Generated from type: [FrooxEngine]FrooxEngine.IcoSphereMeshSH2
-// Generated on: pátek 6. března 2026 14:18:05
-// Resonite version: 2026.3.5.946
-// Resonite Link Version: 0.11.0.0
+// Generated on: středa 11. března 2026 18:39:50
+// Resonite version: 2026.3.11.1110
+// Resonite Link Version: 0.13.0.0
 // -----------------------------------------------------------------------------
 
 using UnityEngine;
@@ -20,8 +20,8 @@ namespace FrooxEngine
 public partial class IcoSphereMeshSH2 : global::FrooxEngine.IcoSphereMesh
 
 {
-    public global::Elements.Core.SphericalHarmonicsL2<UnityEngine.ColorX> Colors { get => Colors_Element.Data; set => Colors_Element.Data = value; }
-public Field<global::FrooxEngine.Sync<global::Elements.Core.SphericalHarmonicsL2<UnityEngine.ColorX>>, global::Elements.Core.SphericalHarmonicsL2<UnityEngine.ColorX>> Colors_Element = new();
+    public UnityEngine.Rendering.SphericalHarmonicsL2 Colors { get => Colors_Element.Data; set => Colors_Element.Data = value; }
+public Field<global::FrooxEngine.Sync<UnityEngine.Rendering.SphericalHarmonicsL2>, UnityEngine.Rendering.SphericalHarmonicsL2> Colors_Element = new();
 public global::Elements.Core.SphericalHarmonicsL2<global::System.Single> RadiusMultiplier { get => RadiusMultiplier_Element.Data; set => RadiusMultiplier_Element.Data = value; }
 public Field<global::FrooxEngine.Sync<global::Elements.Core.SphericalHarmonicsL2<global::System.Single>>, global::Elements.Core.SphericalHarmonicsL2<global::System.Single>> RadiusMultiplier_Element = new();
 public global::System.Boolean NegativeRadiusInvertsColor { get => NegativeRadiusInvertsColor_Element.Data; set => NegativeRadiusInvertsColor_Element.Data = value; }

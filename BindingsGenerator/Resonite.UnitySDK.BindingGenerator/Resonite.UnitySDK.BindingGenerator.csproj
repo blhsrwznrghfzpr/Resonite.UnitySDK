@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="YellowDogMan.ResoniteLink" Version="0.12.0" />
+    <PackageReference Include="YellowDogMan.ResoniteLink" Version="0.13.1" />
   </ItemGroup>
 
   <ItemGroup>

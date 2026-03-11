@@ -114,6 +114,13 @@ public static class FieldArrayConverter
                 var convertedValue = (value as UnityEngine.Bounds?)?.ToResoniteLink();
                 return convertedValue.ToResoniteLinkField();
             }
+                        if(value is UnityEngine.Rendering.SphericalHarmonicsL2 value_Rendering_SphericalHarmonicsL2)
+                return value_Rendering_SphericalHarmonicsL2.ToResoniteLink().ToResoniteLinkField();
+            if(type == typeof(UnityEngine.Rendering.SphericalHarmonicsL2?))
+            {
+                var convertedValue = (value as UnityEngine.Rendering.SphericalHarmonicsL2?)?.ToResoniteLink();
+                return convertedValue.ToResoniteLinkField();
+            }
                         if(value is UnityEngine.QuaternionDouble value_QuaternionDouble)
                 return value_QuaternionDouble.ToResoniteLink().ToResoniteLinkField();
             if(type == typeof(UnityEngine.QuaternionDouble?))
@@ -685,6 +692,38 @@ public static class FieldArrayConverter
                     return field;
                 }
                 
+                        if(type == typeof(SphericalHarmonicsL1))
+            {
+                var field = new Field_SphericalHarmonicsL1();
+                field.BoxedValue = value;
+                return field;
+            }
+
+            
+                        if(type == typeof(SphericalHarmonicsL2))
+            {
+                var field = new Field_SphericalHarmonicsL2();
+                field.BoxedValue = value;
+                return field;
+            }
+
+            
+                        if(type == typeof(SphericalHarmonicsL3))
+            {
+                var field = new Field_SphericalHarmonicsL3();
+                field.BoxedValue = value;
+                return field;
+            }
+
+            
+                        if(type == typeof(SphericalHarmonicsL4))
+            {
+                var field = new Field_SphericalHarmonicsL4();
+                field.BoxedValue = value;
+                return field;
+            }
+
+            
                         if(type == typeof(float2))
             {
                 var field = new Field_float2();
@@ -1301,7 +1340,7 @@ public static class FieldArrayConverter
                 }
                 
             
-        throw new NotSupportedException($"Unsupported value type: {typeof(T).FullName}");
+            throw new NotSupportedException($"Unsupported value type: {typeof(T).FullName}");
     }
 
     public static SyncArray ToResoniteLinkArray<T>(this IEnumerable<T> values)
@@ -1333,6 +1372,8 @@ public static class FieldArrayConverter
                 return values_RectInt.Select(v => v.ToResoniteLink()).ToResoniteLinkArray();
                         if(values is IEnumerable<UnityEngine.Bounds> values_Bounds)
                 return values_Bounds.Select(v => v.ToResoniteLink()).ToResoniteLinkArray();
+                        if(values is IEnumerable<UnityEngine.Rendering.SphericalHarmonicsL2> values_Rendering_SphericalHarmonicsL2)
+                return values_Rendering_SphericalHarmonicsL2.Select(v => v.ToResoniteLink()).ToResoniteLinkArray();
                         if(values is IEnumerable<UnityEngine.QuaternionDouble> values_QuaternionDouble)
                 return values_QuaternionDouble.Select(v => v.ToResoniteLink()).ToResoniteLinkArray();
                         if(values is IEnumerable<UnityEngine.ColorX> values_ColorX)
@@ -1788,7 +1829,7 @@ public static class FieldArrayConverter
                 return array;
             }
             
-        throw new NotSupportedException($"Unsupported value type: {typeof(T).FullName}");
+            throw new NotSupportedException($"Unsupported value type: {typeof(T).FullName}");
     }
 
     public static SyncDictionary ToResoniteLinkDictionary<TKey, TElement>(this IEnumerable<KeyValuePair<TKey, TElement>> dictionary,
@@ -1843,6 +1884,9 @@ public static class FieldArrayConverter
                     .ToResoniteLinkDictionary(conversion);
                         if(keyType == typeof(UnityEngine.Bounds))
                 return dictionary.Select(pair => CreatePair(((UnityEngine.Bounds)(object)pair.Key).ToResoniteLink(), pair.Value))
+                    .ToResoniteLinkDictionary(conversion);
+                        if(keyType == typeof(UnityEngine.Rendering.SphericalHarmonicsL2))
+                return dictionary.Select(pair => CreatePair(((UnityEngine.Rendering.SphericalHarmonicsL2)(object)pair.Key).ToResoniteLink(), pair.Value))
                     .ToResoniteLinkDictionary(conversion);
                         if(keyType == typeof(UnityEngine.QuaternionDouble))
                 return dictionary.Select(pair => CreatePair(((UnityEngine.QuaternionDouble)(object)pair.Key).ToResoniteLink(), pair.Value))
@@ -2589,7 +2633,7 @@ public static class FieldArrayConverter
                 return dict;
             }
             
-        throw new NotSupportedException($"Unsupported key type: {typeof(TKey).FullName}");
+            throw new NotSupportedException($"Unsupported key type: {typeof(TKey).FullName}");
     }
 
     public static ResoniteLink.DataValue ToData<T>(this T value)
@@ -2691,6 +2735,14 @@ public static class FieldArrayConverter
             if(type == typeof(UnityEngine.Bounds?))
             {
                 var convertedValue = (value as UnityEngine.Bounds?)?.ToResoniteLink();
+                return convertedValue.ToData();
+            }
+                        if(value is UnityEngine.Rendering.SphericalHarmonicsL2 value_Rendering_SphericalHarmonicsL2)
+                return value_Rendering_SphericalHarmonicsL2.ToResoniteLink().ToData();
+
+            if(type == typeof(UnityEngine.Rendering.SphericalHarmonicsL2?))
+            {
+                var convertedValue = (value as UnityEngine.Rendering.SphericalHarmonicsL2?)?.ToResoniteLink();
                 return convertedValue.ToData();
             }
                         if(value is UnityEngine.QuaternionDouble value_QuaternionDouble)
@@ -3298,6 +3350,38 @@ public static class FieldArrayConverter
                     return data;
                 }
                 
+                        if(type == typeof(SphericalHarmonicsL1))
+            {
+                var data = new Data_SphericalHarmonicsL1();
+                data.BoxedValue = value;
+                return data;
+            }
+
+            
+                        if(type == typeof(SphericalHarmonicsL2))
+            {
+                var data = new Data_SphericalHarmonicsL2();
+                data.BoxedValue = value;
+                return data;
+            }
+
+            
+                        if(type == typeof(SphericalHarmonicsL3))
+            {
+                var data = new Data_SphericalHarmonicsL3();
+                data.BoxedValue = value;
+                return data;
+            }
+
+            
+                        if(type == typeof(SphericalHarmonicsL4))
+            {
+                var data = new Data_SphericalHarmonicsL4();
+                data.BoxedValue = value;
+                return data;
+            }
+
+            
                         if(type == typeof(float2))
             {
                 var data = new Data_float2();

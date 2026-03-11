@@ -2,9 +2,9 @@
 // -----------------------------------------------------------------------------
 // WARNING: This is auto-generated file! DO NOT MODIFY
 // Generated from type: [FrooxEngine]FrooxEngine.PhotonDust.ColorByVelocityDirectionSH2
-// Generated on: pátek 6. března 2026 14:19:04
-// Resonite version: 2026.3.5.946
-// Resonite Link Version: 0.11.0.0
+// Generated on: středa 11. března 2026 18:42:10
+// Resonite version: 2026.3.11.1110
+// Resonite Link Version: 0.13.0.0
 // -----------------------------------------------------------------------------
 
 using UnityEngine;
@@ -20,8 +20,8 @@ namespace FrooxEngine.PhotonDust
 public partial class ColorByVelocityDirectionSH2 : global::FrooxEngine.PhotonDust.ParticleSystemModule<global::System.Object>
 
 {
-    public global::Elements.Core.SphericalHarmonicsL2<UnityEngine.ColorX> SH { get => SH_Element.Data; set => SH_Element.Data = value; }
-public Field<global::FrooxEngine.Sync<global::Elements.Core.SphericalHarmonicsL2<UnityEngine.ColorX>>, global::Elements.Core.SphericalHarmonicsL2<UnityEngine.ColorX>> SH_Element = new();
+    public UnityEngine.Rendering.SphericalHarmonicsL2 SH { get => SH_Element.Data; set => SH_Element.Data = value; }
+public Field<global::FrooxEngine.Sync<UnityEngine.Rendering.SphericalHarmonicsL2>, UnityEngine.Rendering.SphericalHarmonicsL2> SH_Element = new();
 
 public override void CollectMembers(
     System.Collections.Generic.Dictionary<string, ResoniteLink.Member> members, IConversionContext context)

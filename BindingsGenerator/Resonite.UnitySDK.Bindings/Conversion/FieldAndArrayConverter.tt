@@ -13,6 +13,19 @@ HashSet<string> nonNullableTypes = new HashSet<string>()
 {
     "string",
     "Uri",
+
+    "SphericalHarmonicsL1",
+    "SphericalHarmonicsL2",
+    "SphericalHarmonicsL3",
+    "SphericalHarmonicsL4",
+};
+
+HashSet<string> fieldOnlyTypes = new HashSet<string>()
+{
+    "SphericalHarmonicsL1",
+    "SphericalHarmonicsL2",
+    "SphericalHarmonicsL3",
+    "SphericalHarmonicsL4",
 };
 
 List<string> unityPrimitives = new List<string>()
@@ -34,6 +47,8 @@ List<string> unityPrimitives = new List<string>()
     "Rect",
     "RectInt",
     "Bounds",
+
+    "Rendering.SphericalHarmonicsL2",
 
     // Custom extensions
     "QuaternionDouble",
@@ -116,6 +131,11 @@ List<string> standaloneTypes = new List<string>
     "Rect",
     "IntRect",
     "BoundingBox",
+
+    "SphericalHarmonicsL1",
+    "SphericalHarmonicsL2",
+    "SphericalHarmonicsL3",
+    "SphericalHarmonicsL4",
 };
 
 List<string> vectorTypes = new List<string>
@@ -192,8 +212,8 @@ public static class FieldArrayConverter
         foreach(var type in unityPrimitives)
         {
             #>
-            if(value is UnityEngine.<#=type#> value_<#=type#>)
-                return value_<#=type#>.ToResoniteLink().ToResoniteLinkField();
+            if(value is UnityEngine.<#=type#> value_<#=type.Replace(".", "_")#>)
+                return value_<#=type.Replace(".", "_")#>.ToResoniteLink().ToResoniteLinkField();
             if(type == typeof(UnityEngine.<#=type#>?))
             {
                 var convertedValue = (value as UnityEngine.<#=type#>?)?.ToResoniteLink();
@@ -233,7 +253,7 @@ public static class FieldArrayConverter
         }
         #>
 
-        throw new NotSupportedException($"Unsupported value type: {typeof(T).FullName}");
+            throw new NotSupportedException($"Unsupported value type: {typeof(T).FullName}");
     }
 
     public static SyncArray ToResoniteLinkArray<T>(this IEnumerable<T> values)
@@ -245,8 +265,8 @@ public static class FieldArrayConverter
         foreach(var type in unityPrimitives)
         {
             #>
-            if(values is IEnumerable<UnityEngine.<#=type#>> values_<#=type#>)
-                return values_<#=type#>.Select(v => v.ToResoniteLink()).ToResoniteLinkArray();
+            if(values is IEnumerable<UnityEngine.<#=type#>> values_<#=type.Replace(".", "_")#>)
+                return values_<#=type.Replace(".", "_")#>.Select(v => v.ToResoniteLink()).ToResoniteLinkArray();
             <#
         }
         #>
@@ -255,6 +275,9 @@ public static class FieldArrayConverter
         <#
         foreach(var type in primitiveTypes)
         {
+            if(fieldOnlyTypes.Contains(type))
+                continue;
+
             #>
             if(type == typeof(<#=type#>))
             {
@@ -266,7 +289,7 @@ public static class FieldArrayConverter
         }
         #>
 
-        throw new NotSupportedException($"Unsupported value type: {typeof(T).FullName}");
+            throw new NotSupportedException($"Unsupported value type: {typeof(T).FullName}");
     }
 
     public static SyncDictionary ToResoniteLinkDictionary<TKey, TElement>(this IEnumerable<KeyValuePair<TKey, TElement>> dictionary,
@@ -301,6 +324,8 @@ public static class FieldArrayConverter
         <#
         foreach(var type in primitiveTypes)
         {
+            if(fieldOnlyTypes.Contains(type))
+                continue;
             #>
             if(keyType == typeof(<#=type#>))
             {
@@ -316,7 +341,7 @@ public static class FieldArrayConverter
         }
         #>
 
-        throw new NotSupportedException($"Unsupported key type: {typeof(TKey).FullName}");
+            throw new NotSupportedException($"Unsupported key type: {typeof(TKey).FullName}");
     }
 
     public static ResoniteLink.DataValue ToData<T>(this T value)
@@ -328,8 +353,8 @@ public static class FieldArrayConverter
         foreach(var type in unityPrimitives)
         {
             #>
-            if(value is UnityEngine.<#=type#> value_<#=type#>)
-                return value_<#=type#>.ToResoniteLink().ToData();
+            if(value is UnityEngine.<#=type#> value_<#=type.Replace(".", "_")#>)
+                return value_<#=type.Replace(".", "_")#>.ToResoniteLink().ToData();
 
             if(type == typeof(UnityEngine.<#=type#>?))
             {

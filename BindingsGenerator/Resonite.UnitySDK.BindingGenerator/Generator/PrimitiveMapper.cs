@@ -6,10 +6,16 @@ using System;
 
 public static class PrimitiveMapper
 {
-    public static Type MapEnginePrimitive(TypeDefinition typeDefinition)
+    public static Type MapEnginePrimitive(TypeDefinition typeDefinition, List<TypeReference> genericArguments)
     {
         if (!typeDefinition.IsEnginePrimitive)
             throw new System.ArgumentException($"Type definition must be an engine primitive");
+
+        if(typeDefinition.Name == "SphericalHarmonicsL2" && genericArguments?.Count == 1)
+        {
+            if (genericArguments[0].Type == "color" || genericArguments[0].Type == "colorX")
+                return typeof(UnityEngine.Rendering.SphericalHarmonicsL2);
+        }
 
         return MapEnginePrimitive(typeDefinition.Name);
     }

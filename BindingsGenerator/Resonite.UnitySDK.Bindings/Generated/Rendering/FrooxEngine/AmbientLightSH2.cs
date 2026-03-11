@@ -2,9 +2,9 @@
 // -----------------------------------------------------------------------------
 // WARNING: This is auto-generated file! DO NOT MODIFY
 // Generated from type: [FrooxEngine]FrooxEngine.AmbientLightSH2
-// Generated on: pátek 6. března 2026 14:19:03
-// Resonite version: 2026.3.5.946
-// Resonite Link Version: 0.11.0.0
+// Generated on: středa 11. března 2026 18:42:08
+// Resonite version: 2026.3.11.1110
+// Resonite Link Version: 0.13.0.0
 // -----------------------------------------------------------------------------
 
 using UnityEngine;
@@ -20,8 +20,8 @@ namespace FrooxEngine
 public partial class AmbientLightSH2 : global::FrooxEngine.Component, global::FrooxEngine.ICustomInspector
 
 {
-    public global::Elements.Core.SphericalHarmonicsL2<UnityEngine.ColorX> AmbientLight { get => AmbientLight_Element.Data; set => AmbientLight_Element.Data = value; }
-public Field<global::FrooxEngine.Sync<global::Elements.Core.SphericalHarmonicsL2<UnityEngine.ColorX>>, global::Elements.Core.SphericalHarmonicsL2<UnityEngine.ColorX>> AmbientLight_Element = new();
+    public UnityEngine.Rendering.SphericalHarmonicsL2 AmbientLight { get => AmbientLight_Element.Data; set => AmbientLight_Element.Data = value; }
+public Field<global::FrooxEngine.Sync<UnityEngine.Rendering.SphericalHarmonicsL2>, UnityEngine.Rendering.SphericalHarmonicsL2> AmbientLight_Element = new();
 public global::System.Boolean IsActive { get => IsActive_Element.Data; set => IsActive_Element.Data = value; }
 public Field<global::FrooxEngine.RawOutput<global::System.Boolean>, global::System.Boolean> IsActive_Element = new();
 

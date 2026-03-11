@@ -1,10 +1,11 @@
-﻿using System;
+﻿using ResoniteLink;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ResoniteLink;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public static class UnityPrimitiveConverter
 {
@@ -46,4 +47,61 @@ public static class UnityPrimitiveConverter
         min = b.min.ToResoniteLink(),
         max = b.max.ToResoniteLink()
     };
+
+    static float GetSHScale(int coefficientIndex)
+    {
+        switch(coefficientIndex)
+        {
+            case 0:
+                return 0.2820947917f;
+
+            case 1:
+            case 2:
+            case 3:
+                return 0.4886025119f;
+
+            case 4:
+            case 5:
+            case 7:
+                return 1.0925484306f;
+
+            case 6:
+                return 0.3153915652f;
+
+            case 8:
+                return 0.5462742153f;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(coefficientIndex));
+        }
+    }
+
+    public static ResoniteLink.SphericalHarmonicsL2 ToResoniteLink(this UnityEngine.Rendering.SphericalHarmonicsL2 sh)
+    {
+        var link = new SphericalHarmonicsL2();
+
+        colorX GetCoefficient(int index)
+        {
+            // Unity SH coefficients are pre-multiplied, so we need to compensate
+            var scale = 1f / GetSHScale(index);
+
+            var r = sh[0, index] * scale;
+            var g = sh[0, index] * scale;
+            var b = sh[0, index] * scale;
+
+            return new colorX() { r = r, g = g, b = b, a = 1, Profile = "Linear" };
+        }
+
+        link.SH0 = new Data_colorX() { Value = GetCoefficient(0) };
+        link.SH1 = new Data_colorX() { Value = GetCoefficient(1) };
+        link.SH2 = new Data_colorX() { Value = GetCoefficient(2) };
+        link.SH3 = new Data_colorX() { Value = GetCoefficient(3) };
+        link.SH4 = new Data_colorX() { Value = GetCoefficient(4) };
+        link.SH5 = new Data_colorX() { Value = GetCoefficient(5) };
+        link.SH6 = new Data_colorX() { Value = GetCoefficient(6) };
+        link.SH7 = new Data_colorX() { Value = GetCoefficient(7) };
+        link.SH8 = new Data_colorX() { Value = GetCoefficient(8) };
+
+        return link;
+    }
 }

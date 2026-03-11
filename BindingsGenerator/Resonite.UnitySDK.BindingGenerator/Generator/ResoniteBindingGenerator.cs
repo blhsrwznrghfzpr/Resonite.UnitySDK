@@ -392,7 +392,7 @@ public partial class ResoniteBindingGenerator
 
         if (type.IsEnginePrimitive && !type.IsEnum)
         {
-            var primitiveType = PrimitiveMapper.MapEnginePrimitive(type);
+            var primitiveType = PrimitiveMapper.MapEnginePrimitive(type, genericArguments);
 
             if (primitiveType != null)
             {
