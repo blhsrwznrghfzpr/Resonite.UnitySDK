@@ -1,5 +1,5 @@
 name: 'Assets'
-description: 'In case an asset is mangled on conversion and other issues touching asset import. If you issue is purely graphical, please use the Graphical issue template.'
+description: 'In case an asset is mangled on conversion and other issues touching asset import.'
 
 labels: ["Asset Conversion"]
 type: bug
@@ -33,8 +33,8 @@ body:
   - type: textarea
     id: what
     attributes:
-      label: 'What were you trying to convert?'
-      description: 'Give us some details on which type of asset you were trying to send to Resonite, and how.'
+      label: 'What were you trying to import?'
+      description: 'Give us some details on which type of asset you were trying to send to Resonite, and how it is used in the scene (through which components, etc).'
     validations:
       required: true
 
