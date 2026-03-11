@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 
-public class BipedAvatarDescriptor : MonoBehaviour, IResoniteLinkPostProcessor
+public class BipedAvatarDescriptor : MonoBehaviour, IConversionPostProcessor
 {
     const float AXIS_LENGTH = 0.25f;
 
