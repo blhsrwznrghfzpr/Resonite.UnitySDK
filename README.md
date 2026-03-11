@@ -1,13 +1,24 @@
-Resonite SDK for the Unity Editor. This will allow sending content from Unity Editor to Resonite easily.
+Resonite SDK for the Unity Editor. This will allow sending content from Unity Editor to Resonite easily. Built on top of ResoniteLink: https://github.com/Yellow-Dog-Man/ResoniteLink
 
-Built on top of ResoniteLink: https://github.com/Yellow-Dog-Man/ResoniteLink
-
-## ⚠️ Under heavy development! ⚠️
-Currently this is under heavy development and isn't ready for use yet.
-
-The code and structure is currently for quick prototyping & implementation phase and will likely move around after.
-
-We do **NOT** accept PR's / issues at this point. Please wait for this notice to be removed.
+> [!CAUTION]
+> # Beta warning
+> The Resonite SDK for Unity Editor is currently in beta state! This means it's not 100 % ready for full use - if you're looking to just convert your content hassle-free, please give it a little bit more time.
+> 
+> However if you want to start playing with it and don't mind messing with the jank, you're now free to do so!
+>
+> We'd also love your help if you want to help us to polish it, whether it's by reporting issues or contributing improvements.
+>
+> We are now accepting issues & PR's to help improve it!
+> 
+> ## What to expect in beta state
+> - SDK can break often and spew out errors
+> - A lot of common content will not convert yet
+>     - Please report & upvote things that don't convert so we know what to prioritize!
+>     - If you're willing, you can also contribute improvements for conversions (see below for info)
+> - UI is clunky and doesn't look pretty
+>     - If you're interested, we're also looking for help with this!
+>     - The focus was getting the core working and expanding from there
+> - Some processes and workflows are not fully fleshed out yet
 
 # What is this?
 Resonite is a free social VR sandbox platform, which allows for socialization and collaborative in-game building. While game content can be fully built in-game (either in desktop or VR modes), not every user prefers this workflow. Unity SDK opens a new away to build content for Resonite, by using the Unity Editor and more traditional workflow or existing tooling. 
