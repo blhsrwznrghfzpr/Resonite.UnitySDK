@@ -35,8 +35,37 @@ You can:
 - Use Resonite to visualize and prototype your Unity projects in VR and take advatange of Resonite's realtime collaboration
 - Expand the SDk or use it as reference implementation for your own custom tooling for other engines
 
-## How to use
-TO DO!!!
+## Getting started
+Video tutorial:
+
+[![Resonite SDK for Unity Editor](https://img.youtube.com/vi/lRGDnu9OeSs/0.jpg)](https://www.youtube.com/watch?v=lRGDnu9OeSs)
+
+1) Go to [Releases](https://github.com/Yellow-Dog-Man/Resonite.UnitySDK/releases)
+2) Download ResoniteSDK.unitypackage for the latest release
+    - Note: We'll likely switch to Unity Package Manager soon(ish)
+3) Import the package into your Unity project
+4) Go to Resonite SDK in Unity Editor -> Open Resonite SDK Manager to open Resonite SDK window
+6) Run Resonite (make sure you got latest version)
+7) Create a new world (Blank template is recommended for converting worlds)
+8) Go to Session on dash and click "Enable Resonite Link"
+9) Go back to Unity Editor and the Resonite SDK window
+10) The session should appear under "AutoDiscovery" mode - click the connect button
+    - If it does not appear, you can switch to Manual mode and enter the port manually
+11) If you're converting an avatar, uncheck "Convert Skybox"
+12) Click either "Send Current Scene" or "Start Realtime Mode"
+    - Realtime mode will translate the changes in Editor right as you make them
+   
+### How to convert an avatar
+Converting avatar generally follows the same process.
+
+1) You will need to attach a special component: "BipedAvatarDescriptor" to the root of your rig
+2) Assign Biped reference to Animator with the humanoid "Avatar" reference that you want to convert
+3) Assign Head, Left Hand & Right Hand References and align them
+    - Feet and hips are optional
+    - Gizmos will render when assigned
+    - Blue line if forwards, green upwards and red right direction
+12) Click either "Send Current Scene" or "Start Realtime Mode"
+    - Realtime mode will translate the changes in Editor right as you make them - you can wear the avatar and attach more objects to it while testing them live in Resonite
 
 ## What if something doesn't convert properly?
 If you run into content that doesn't convert at all or has conversion problems, best way is to make sure it's reported!
