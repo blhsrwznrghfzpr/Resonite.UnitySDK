@@ -99,10 +99,10 @@ public class BipedAvatarDescriptor : MonoBehaviour, IConversionPostProcessor
         }
 
         if (LeftHandReference != null)
-            DrawHand(LeftHandReference, Color.cyan);
+            DrawHand(LeftHandReference, Color.cyan, false);
 
         if (RightHandReference != null)
-            DrawHand(RightHandReference, Color.red);
+            DrawHand(RightHandReference, Color.red, true);
 
         if (LeftFootReference != null)
             DrawFoot(LeftFootReference, Color.cyan);
@@ -119,11 +119,24 @@ public class BipedAvatarDescriptor : MonoBehaviour, IConversionPostProcessor
         }
     }
 
-    void DrawHand(Transform transform, Color handColor)
+    void DrawHand(Transform transform, Color handColor, bool isRight)
     {
-        Gizmos.color = handColor;
-        DrawCube(transform, new Vector3(0.05f, 0.02f, 0.1f));
+        var sideMul = isRight ? 1 : -1;
 
+        Gizmos.color = handColor;
+
+        DrawCube(transform, new Vector3(0.05f, 0.02f, 0.05f));
+
+        // Crude fingers. This is just to better indicate that it's supposed to represent a hand
+        for (int i = 0; i < 4; i++)
+        {
+            var offset = (i / 4.0f) - 0.4f;
+            DrawCube(transform, new Vector3(0.0075f, 0.0075f, 0.05f), new Vector3(offset * 0.05f, 0f, 0.05f), Quaternion.identity);
+        }
+
+        // Thumb
+        DrawCube(transform, new Vector3(0.015f, 0.015f, 0.04f), new Vector3(-0.025f * sideMul, 0f, 0.01f), Quaternion.AngleAxis(-45f * sideMul, Vector3.up));
+        
         DrawAxes(transform);
     }
 
@@ -135,9 +148,17 @@ public class BipedAvatarDescriptor : MonoBehaviour, IConversionPostProcessor
         DrawAxes(transform);
     }
 
-    void DrawCube(Transform transform, Vector3 size)
+    void DrawCube(Transform transform, Vector3 size) => DrawCube(transform, size, Vector3.zero, Quaternion.identity);
+    void DrawCube(Transform transform, Vector3 size, Vector3 offset, Quaternion rotationOffset)
     {
-        Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
+        var rotation = transform.rotation * rotationOffset;
+        offset = transform.rotation * offset;
+
+        // We want to move the cube along the forward axis, because the transform represents the "root"
+        var axisOffset = rotation * Vector3.forward * size.z * 0.4f;
+
+        Gizmos.matrix = Matrix4x4.TRS(transform.position + offset + axisOffset, rotation, Vector3.one);
+
         Gizmos.DrawWireCube(Vector3.zero, size);
         Gizmos.matrix = Matrix4x4.identity;
     }
