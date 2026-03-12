@@ -21,7 +21,7 @@ Resonite SDK for the Unity Editor. This will allow sending content from Unity Ed
 > - Some processes and workflows are not fully fleshed out yet
 
 # What is this?
-Resonite is a free social VR sandbox platform, which allows for socialization and collaborative in-game building. While game content can be fully built in-game (either in desktop or VR modes), not every user prefers this workflow. Unity SDK opens a new away to build content for Resonite, by using the Unity Editor and more traditional workflow or existing tooling. 
+Resonite is a free social VR sandbox platform, which allows for socialization and collaborative in-game building. While game content can be fully built in-game (either in desktop or VR modes), not every user prefers this workflow. Unity SDK opens a new way to build content for Resonite, by using the Unity Editor and more traditional workflow or existing tooling. 
 
 You can get Resonite free on Steam: https://store.steampowered.com/app/2519830/Resonite/
 
@@ -32,8 +32,8 @@ You can:
     - Avatars
     - Props 
 - Expand the conversion system to handle more of your existing content or custom tailor conversion for your projects
-- Use Resonite to visualize and prototype your Unity projects in VR and take advatange of Resonite's realtime collaboration
-- Expand the SDk or use it as reference implementation for your own custom tooling for other engines
+- Use Resonite to visualize and prototype your Unity projects in VR and take advantage of Resonite's realtime collaboration
+- Expand the SDK or use it as reference implementation for your own custom tooling for other engines
 
 ## Getting started
 Video tutorial:
@@ -70,10 +70,10 @@ Converting avatar generally follows the same process.
 ## What if something doesn't convert properly?
 If you run into content that doesn't convert at all or has conversion problems, best way is to make sure it's reported!
 
-1) First, determine determine what type of conversion problem did you run into:
+1) First, determine what type of conversion problem did you run into:
     - [Materials / Shaders](https://github.com/Yellow-Dog-Man/Resonite.UnitySDK/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22Material%2FShader%20Conversion%22)
     - [Scene Hierarchy / Components](https://github.com/Yellow-Dog-Man/Resonite.UnitySDK/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22Component%20Conversion%22) (e.g. colliders, properties, behaviors and so on)
-    - [Assets](https://github.com/Yellow-Dog-Man/Resonite.UnitySDK/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22Asset%20Conversion%22) (e.g. garbled/missing meshes, textures not transfering on even supported materials...)
+    - [Assets](https://github.com/Yellow-Dog-Man/Resonite.UnitySDK/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22Asset%20Conversion%22) (e.g. garbled/missing meshes, textures not transferring on even supported materials...)
     - [Something else broke](https://github.com/Yellow-Dog-Man/Resonite.UnitySDK/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug) (general bugs)
 2) Search if there's an existing issue first
     - You can click the types of conversion problems above to search by type!
@@ -92,9 +92,9 @@ If you run into content that doesn't convert at all or has conversion problems, 
     - Please read the "Contributing" section below for more info on how to contribute!
 
 # Contributing
-Contributions to this SDK are welcome! Converting content is a complex task and there and big part of this tool is giving more power to you - the community, to create new workflows and bring more content to Resonite. 
+Contributions to this SDK are welcome! Converting content is a complex task and a big part of this tool is giving more power to you - the community, to create new workflows and bring more content to Resonite. 
 
-We'll also give shoutouts to contributors in the Update nodes for Resonite itself!
+We'll also give shoutouts to contributors in the Update notes for Resonite itself!
 
 ## Contributing component converters
 - Improving existing converters
@@ -102,10 +102,10 @@ We'll also give shoutouts to contributors in the Update nodes for Resonite itsel
 - Adding new converters
     - If there are components/behaviors that aren't converted at all - feel free to implement converters for them!
     - This should avoid adding 3rd party SDK's / dependencies to this though - if you want to do that, please consult us first by creating an Issue
-    - At some point, we might suggest separating converters for 3rd party libraries into their own repo's and just linking them here
+    - At some point, we might suggest separating converters for 3rd party libraries into their own repos and just linking them here
  
 ### How to PR component converter
-If you want to contribute a new or improved comopnent converter, please ensure following:
+If you want to contribute a new or improved component converter, please ensure following:
 - Adds sample content to the TestScene to test conversion with
 - Make sure you test all other conversions in the TestScene that would be affected by your converter
 - Ideally create issue for the converter first (if it does not exist)
@@ -167,7 +167,7 @@ This replicates the "data structure" of Resonite types without the actual behavi
 
 Apart from Components & SyncObjects which contain members, the bindings generation also replicates any other data types that are valid in data model - classes, interfaces, structs and enums. 
 
-Generic constraints and implemented interfaces are replicated as well. This allows the bindings to use C#'s own type system to resolve majority of type constarints - e.g. components that have references that need to be specific interface, can reference the binding proxies naturally.
+Generic constraints and implemented interfaces are replicated as well. This allows the bindings to use C#'s own type system to resolve majority of type constraints - e.g. components that have references that need to be specific interface, can reference the binding proxies naturally.
 
 This way Resonite's C# type structure is replicated, without needing to reference FrooxEngine itself and its behaviors.
 
@@ -201,9 +201,9 @@ There are a few important points:
     - You can only specify one type - even if you need mix of components (e.g. MeshRenderer + MeshFilter) - this is the "entry point" for your converter
     - The scene conversion automatically attaches and updates converters - you don't need to worry about this process or attaching them manually
     - You can fetch other dependent components in your converter code (e.g. MeshRenderer converter will dynamically get MeshFilter)
-- Converters can indirectly supress other converters
+- Converters can indirectly suppress other converters
     - In some cases, certain Unity components are reused. For example TextMesh uses the MeshRenderer, which is also used with MeshFilter
-    - The converter for TextMesh will supress the MeshRenderer converter, because it takes precedence
+    - The converter for TextMesh will suppress the MeshRenderer converter, because it takes precedence
     - Each converter can define a function, which will be called with list of all components on given GameObject to be converted
     - If you don't want other converters handling any of the components in that list - remove them from the list
 - The conversion should be written so it can handle both freshly attached components & updating existing conversion
