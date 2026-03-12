@@ -39,6 +39,18 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: mods-present
+    attributes:
+      label: 'I tested the issue **without** mods.'
+      description: 'Did you test the issue without any mods to make sure it is not caused by those.'
+      options:
+        - 'Yes'
+        - 'No'
+      default: 0
+    validations:
+      required: true
+
   - type: textarea
     id: expect
     attributes:
