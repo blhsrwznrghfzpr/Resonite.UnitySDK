@@ -109,6 +109,14 @@ public class BipedAvatarDescriptor : MonoBehaviour, IConversionPostProcessor
 
         if (RightFootReference != null)
             DrawFoot(RightFootReference, Color.red);
+
+        if(HipsReference != null)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawWireSphere(HipsReference.position, 0.1f);
+
+            DrawAxes(HipsReference);
+        }
     }
 
     void DrawHand(Transform transform, Color handColor)
