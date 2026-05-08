@@ -1,4 +1,4 @@
-﻿using Elements.Assets;
+using Elements.Assets;
 using FrooxEngine;
 using ResoniteLink;
 using System;
@@ -105,11 +105,11 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
         {
             assetPath = Path.GetFullPath(assetPath);
 
-            if(File.Exists(assetPath) && AssetConversionHelper.IsTextureFileSupportedByResonite(assetPath))
+            if (File.Exists(assetPath) && AssetConversionHelper.IsTextureFileSupportedByResonite(assetPath))
                 return new ImportTexture2DFile() { FilePath = assetPath };
         }
 
-        if(!texture.isReadable)
+        if (!texture.isReadable)
         {
             var readableTexture = new UnityEngine.Texture2D(texture.width, texture.height,
                 texture.format.IsHDR() ? TextureFormat.RGBAHalf : TextureFormat.RGBA32, false);
@@ -132,11 +132,19 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
             var pixels = texture.GetPixels(0);
 
             for (int y = 0; y < import.Height; y++)
-                for(int x = 0; x < import.Width; x++)
+            {
+                int ySource = y;
+                if (!SystemInfo.graphicsUVStartsAtTop)
                 {
-                    var c = pixels[x + y * import.Width];
+                    // On OpenGL systems (e.g. Linux) GetPixels returns them from bottom to top
+                    ySource = import.Height - 1 - y;
+                }
+                for (int x = 0; x < import.Width; x++)
+                {
+                    var c = pixels[x + ySource * import.Width];
                     data[x, y] = c.ToResoniteLink();
                 }
+            }
 
             return import;
         }
@@ -152,11 +160,19 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
             var pixels = texture.GetPixels32(0);
 
             for (int y = 0; y < import.Height; y++)
+            {
+                int ySource = y;
+                if (!SystemInfo.graphicsUVStartsAtTop)
+                {
+                    // On OpenGL systems (e.g. Linux) GetPixels returns them from bottom to top
+                    ySource = import.Height - 1 - y;
+                }
                 for (int x = 0; x < import.Width; x++)
                 {
-                    var c = pixels[x + y * import.Width];
+                    var c = pixels[x + ySource * import.Width];
                     data[x, y] = c.ToResoniteLink();
                 }
+            }
 
             return import;
         }

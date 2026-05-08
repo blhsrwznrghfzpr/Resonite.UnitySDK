@@ -137,6 +137,10 @@ InitTestScene*.unity*
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
 
+# Auto-generated on Linux systems, apparently
+/[Aa]ssets/csc.rsp
+/[Aa]ssets/csc.rsp.meta
+
 # Custom material packages
 ## Poiyomi
 /[Pp]ackages/com.poiyomi.toon
