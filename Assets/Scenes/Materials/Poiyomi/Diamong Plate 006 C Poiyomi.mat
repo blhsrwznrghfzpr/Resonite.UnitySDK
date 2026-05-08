@@ -31,6 +31,11 @@ Material:
   m_DoubleSidedGI: 0
   m_CustomRenderQueue: 2000
   stringTagMap:
+    OriginalKeywords: AUTO_EXPOSURE BSSBLOOMFOGTYPE_HEIGHT MOCHIE_PBR POI_SUBSURFACESCATTERING
+      PROP_LIGHTINGAOMAPS VIGNETTE_MASKED _EMISSION _GLOSSYREFLECTIONS_OFF _LIGHTINGMODE_TEXTURERAMP
+      _RIM2STYLE_POIYOMI _RIMSTYLE_POIYOMI _STOCHASTICMODE_DELIOT_HEITZ _STYLIZEDREFLECTIONMODE_LILTOON
+    OriginalShader: .poiyomi/Poiyomi Toon
+    OriginalShaderGUID: 9444ce77bf4418748b1e8591b9d97f85
     RenderType: Opaque
     _SSSThicknessMap_texPack_a_channel: 4
     _SSSThicknessMap_texPack_a_fallback: 1
@@ -156,10 +161,6 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DepthTexture:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _DetailAlbedoMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
@@ -3112,7 +3113,7 @@ Material:
     - m_end_voronoiRandom: 0
     - m_lightingCategory: 1
     - m_mainCategory: 1
-    - m_modifierCategory: 0
+    - m_modifierCategory: 1
     - m_renderingCategory: 0
     - m_specialFXCategory: 1
     - m_start_ALDecalSpectrum: 0
@@ -3183,11 +3184,11 @@ Material:
     - m_start_OutlineStencilPassFrontOptions: 0
     - m_start_PPAnimations: 0
     - m_start_PathAudioLink: 0
-    - m_start_PoiGlobalCategory: 0
+    - m_start_PoiGlobalCategory: 1
     - m_start_PoiLightData: 0
-    - m_start_PoiPostProcessingCategory: 0
+    - m_start_PoiPostProcessingCategory: 1
     - m_start_PoiShading: 1
-    - m_start_PoiUVCategory: 0
+    - m_start_PoiUVCategory: 1
     - m_start_RGBMask: 0
     - m_start_Rim2AudioLink: 0
     - m_start_RimAudioLink: 0
@@ -3243,8 +3244,8 @@ Material:
     - m_start_stylizedSpec: 0
     - m_start_subsurfaceScattering: 1
     - m_start_truchet: 0
-    - m_start_udimdiscardOptions: 0
-    - m_start_udimfacediscardOptions: 0
+    - m_start_udimdiscardOptions: 1
+    - m_start_udimfacediscardOptions: 1
     - m_start_uvDistortion: 0
     - m_start_uvLocalWorld: 0
     - m_start_uvPanosphere: 0
@@ -3255,8 +3256,8 @@ Material:
     - m_start_videoEffects: 0
     - m_start_voronoi: 0
     - m_start_voronoiRandom: 0
-    - m_thirdpartyCategory: 0
-    - m_vertexCategory: 0
+    - m_thirdpartyCategory: 1
+    - m_vertexCategory: 1
     - s_end_ALAlpha: 0
     - s_end_ALDecalAudioModsOptions: 0
     - s_end_ALDecalBand: 0

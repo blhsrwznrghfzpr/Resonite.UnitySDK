@@ -295,10 +295,33 @@ public class PoiyomiXiexeConverter
             return matcap;
         }
 
-        if (matcap is not UnityEngine.Texture2D originalMatcap || !matcap.isReadable)
+        if (matcap is not UnityEngine.Texture2D originalMatcap)
         {
-            Debug.LogWarning($"Matcap texture {matcap.name} is not readable; could not convert it to Opaque for Resonite's shader.");
+            Debug.LogWarning($"Matcap texture {matcap.name} is not 2D; could not convert it to Opaque for Resonite's shader.");
             return matcap;
+        }
+
+        TextureImporter importer = null;
+        TextureImporterSettings originalSettings = new();
+        if (!originalMatcap.isReadable)
+        {
+            Debug.Log($"Matcap texture {originalMatcap.name} is not readable; temporarily re-importing it as readable.");
+            importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalMatcap)) as TextureImporter;
+            if (importer == null)
+            {
+                Debug.LogWarning($"Matcap texture {originalMatcap.name} could not be made readable; could not convert it to Opaque for Resonite's shader.");
+                return originalMatcap;
+            }
+
+            importer.ReadTextureSettings(originalSettings);
+            TextureImporterSettings copySettings = new();
+            originalSettings.CopyTo(copySettings);
+            copySettings.readable = true;
+            importer.SetTextureSettings(copySettings);
+            if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
+            {
+                importer.SaveAndReimport();
+            }
         }
 
         var opaqueMatcap = AssetCache.MatcapTexture;
@@ -331,6 +354,16 @@ public class PoiyomiXiexeConverter
             opaqueMatcap.SetPixels(0, y, originalMatcap.width, 1, pixels);
         }
         opaqueMatcap.Apply();
+
+        if (importer != null)
+        {
+            importer.SetTextureSettings(originalSettings);
+            if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
+            {
+                importer.SaveAndReimport();
+            }
+        }
+
         return opaqueMatcap;
     }
 
@@ -412,10 +445,33 @@ public class PoiyomiXiexeConverter
         {
             return ramp;
         }
-        if (ramp is not UnityEngine.Texture2D originalRamp || !ramp.isReadable)
+        if (ramp is not UnityEngine.Texture2D originalRamp)
         {
-            Debug.LogWarning($"Shadow ramp texture {ramp.name} is not readable; could not bake shadow tint and strength for Resonite's shader.");
+            Debug.LogWarning($"Shadow ramp texture {ramp.name} is not 2D; could not bake shadow tint and strength for Resonite's shader.");
             return ramp;
+        }
+
+        TextureImporter importer = null;
+        TextureImporterSettings originalSettings = new();
+        if (!originalRamp.isReadable)
+        {
+            Debug.Log($"Shadow ramp texture {originalRamp.name} is not readable; temporarily re-importing it as readable.");
+            importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalRamp)) as TextureImporter;
+            if (importer == null)
+            {
+                Debug.LogWarning($"Shadow ramp texture {originalRamp.name} could not be made readable; could not bake shadow tint and strength for Resonite's shader.");
+                return originalRamp;
+            }
+
+            importer.ReadTextureSettings(originalSettings);
+            TextureImporterSettings copySettings = new();
+            originalSettings.CopyTo(copySettings);
+            copySettings.readable = true;
+            importer.SetTextureSettings(copySettings);
+            if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
+            {
+                importer.SaveAndReimport();
+            }
         }
 
         var colorizedRamp = AssetCache.ShadowRampTexture;
@@ -447,6 +503,16 @@ public class PoiyomiXiexeConverter
             colorizedRamp.SetPixels(0, y, originalRamp.width, 1, pixels);
         }
         colorizedRamp.Apply();
+
+        if (importer != null)
+        {
+            importer.SetTextureSettings(originalSettings);
+            if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
+            {
+                importer.SaveAndReimport();
+            }
+        }
+
         return colorizedRamp;
     }
 
