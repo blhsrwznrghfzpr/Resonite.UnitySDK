@@ -108,7 +108,7 @@ public class PoiyomiXiexeConverter
     {
         if (Material.GetFloat("_MochieBRDF") > 0)
         {
-            Xiexe.MetallicGlossMap = Context.GetITexture2D(Material.GetTexture("_MochieMetallicMaps"));
+            Xiexe.MetallicGlossMap = Context.GetITexture2D(ReflectionSwizzle());
             Xiexe.MetallicGlossMapOffset = Material.GetTextureOffset("_MochieMetallicMaps");
             Xiexe.MetallicGlossMapScale = Material.GetTextureScale("_MochieMetallicMaps");
             Xiexe.MetallicUV = (int)Material.GetFloat("_MochieMetallicMapsUV");
@@ -175,6 +175,82 @@ public class PoiyomiXiexeConverter
             Xiexe.Glossiness = 0;
             Xiexe.Reflectivity = 1;
         }
+    }
+
+    private Texture ReflectionSwizzle()
+    {
+        PoiyomiColorChannel metallic = (PoiyomiColorChannel)Material.GetFloat("_MochieMetallicMapsMetallicChannel");
+        PoiyomiColorChannel smoothness = (PoiyomiColorChannel)Material.GetFloat("_MochieMetallicMapsRoughnessChannel");
+        PoiyomiColorChannel reflection = (PoiyomiColorChannel)Material.GetFloat("_MochieMetallicMapsReflectionMaskChannel");
+        PoiyomiColorChannel specular = (PoiyomiColorChannel)Material.GetFloat("_MochieMetallicMapsSpecularMaskChannel");
+        bool invertMetallic = Material.GetFloat("_MochieMetallicMapInvert") > 0;
+        bool invertSmoothness = Material.GetFloat("_MochieRoughnessMapInvert") > 0;
+        bool invertReflection = Material.GetFloat("_MochieReflectionMaskInvert") > 0;
+        bool invertSpecular = Material.GetFloat("_MochieSpecularMaskInvert") > 0;
+
+        Texture originalMetallicRaw = Material.GetTexture("_MochieMetallicMaps");
+        if (
+            metallic == PoiyomiColorChannel.R && !invertMetallic &&
+            smoothness == PoiyomiColorChannel.G && !invertSmoothness &&
+            reflection == PoiyomiColorChannel.B && !invertReflection &&
+            specular == PoiyomiColorChannel.A && !invertSpecular
+        )
+        {
+            // Standard mapping, no swizzle necessary
+            return originalMetallicRaw;
+        }
+
+        if (originalMetallicRaw is not UnityEngine.Texture2D originalMetallic)
+        {
+            Debug.LogWarning($"Packed metallic map {originalMetallicRaw.name} is not 2D; could not perform channel swizzling. You will need to unpack and repack the channels manually in Resonite.");
+            return originalMetallicRaw;
+        }
+
+        TextureImporter importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalMetallic)) as TextureImporter;
+        if (importer == null)
+        {
+            Debug.LogWarning($"Packed metallic map {originalMetallic.name} is not readable; could not perform channel swizzling. You will need to unpack and repack the channels manually in Resonite.");
+            return originalMetallic;
+        }
+
+        TextureImporterSettings originalSettings = new();
+        importer.ReadTextureSettings(originalSettings);
+        TextureImporterSettings copySettings = new();
+        originalSettings.CopyTo(copySettings);
+        copySettings.swizzleR = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, metallic, invertMetallic);
+        copySettings.swizzleG = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, smoothness, invertSmoothness);
+        copySettings.swizzleB = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, reflection, invertReflection);
+        copySettings.swizzleA = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, specular, invertSpecular);
+        copySettings.readable = true;
+        importer.SetTextureSettings(copySettings);
+        if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
+        {
+            importer.SaveAndReimport();
+        }
+
+        var metallicTexture = AssetCache.MetallicTexture;
+        if (metallicTexture == null || metallicTexture.width != originalMetallic.width || metallicTexture.height != originalMetallic.height)
+        {
+            if (metallicTexture != null)
+            {
+                UnityEngine.Texture2D.Destroy(metallicTexture);
+            }
+            metallicTexture = new(originalMetallic.width, originalMetallic.height, originalMetallic.format, false, true, true)
+            {
+                name = "PoiyomiConverter swizzled metallic texture"
+            };
+            AssetCache.MetallicTexture = metallicTexture;
+        }
+
+        Graphics.CopyTexture(originalMetallic, 0, 0, metallicTexture, 0, 0);
+
+        importer.SetTextureSettings(originalSettings);
+        if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
+        {
+            importer.SaveAndReimport();
+        }
+
+        return metallicTexture;
     }
 
     private void UpdateEmission()

@@ -56,7 +56,7 @@ public class PoiyomiConverter : ResoniteMaterialConverter
         {
             PbsComponent = gameObject.AddComponent<FrooxEngine.PBS_MetallicWrapper>();
         }
-        return new PoiyomiPbsConverter(PbsComponent.Data, material, context).UpdateConversion();
+        return new PoiyomiPbsConverter(PbsComponent.Data, material, context, AssetCache).UpdateConversion();
     }
 
     private IAssetProvider<FrooxEngine.Material> UpdateXiexeConversion(UnityEngine.Material material, IConversionContext context)
