@@ -12,6 +12,7 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
     Renderite.Shared.TextureWrapMode _wrapModeU;
     Renderite.Shared.TextureWrapMode _wrapModeV;
     Renderite.Shared.TextureFilterMode? _filterMode;
+    Renderite.Shared.ColorProfile _colorProfile;
     int? _anisoLevel;
     bool _uncompressed;
     bool _crunchCompressed;
@@ -52,6 +53,8 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
         _uncompressed = !Source.format.IsCompressed();
         _crunchCompressed = Source.format.IsCrunchCompressed();
 
+        _colorProfile = Source.isDataSRGB ? Renderite.Shared.ColorProfile.sRGB : Renderite.Shared.ColorProfile.Linear;
+
         _readable = Source.isReadable;
 
         return ConvertTexture2D(Source);
@@ -86,6 +89,8 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
 
         Provider.Data.MipMaps = _mipMaps;
         Provider.Data.MipMapFilter = Filtering.Box;
+
+        Provider.Data.PreferredProfile = _colorProfile;
 
         Provider.Data.Uncompressed = _uncompressed;
         Provider.Data.CrunchCompressed = _crunchCompressed;
