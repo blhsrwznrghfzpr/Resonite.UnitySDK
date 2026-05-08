@@ -1885,9 +1885,9 @@ Material:
     - _LightingEnableLightVolumes: 1
     - _LightingForceColorEnabled: 0
     - _LightingForcedColorThemeIndex: 0
-    - _LightingGradientEnd: 1
+    - _LightingGradientEnd: 0.5
     - _LightingGradientStart: 0
-    - _LightingIgnoreAmbientColor: 1
+    - _LightingIgnoreAmbientColor: 0.9
     - _LightingIndirectUsesNormals: 0
     - _LightingMapMode: 0
     - _LightingMinLightBrightness: 0
@@ -1904,7 +1904,7 @@ Material:
     - _LightingViewDirOffsetPitch: 0
     - _LightingViewDirOffsetYaw: 0
     - _LightingWrappedNormalization: 0
-    - _LightingWrappedWrap: 0.65
+    - _LightingWrappedWrap: 0
     - _LineColorThemeIndex: 0
     - _LineWidth: 1
     - _LookAtAlphaAlpha: 1
@@ -2665,7 +2665,7 @@ Material:
     - _ShadowOffset: 0
     - _ShadowPostAO: 0
     - _ShadowReceive: 0
-    - _ShadowStrength: 0.793
+    - _ShadowStrength: 1
     - _ShadowStrengthMaskUV: 0
     - _SkinThicknessMapInvert: 0
     - _SkinThicknessMapUV: 0
@@ -3980,7 +3980,7 @@ Material:
     - _LightingAOMapsPan: {r: 0, g: 0, b: 0, a: 0}
     - _LightingDetailShadowMapsPan: {r: 0, g: 0, b: 0, a: 0}
     - _LightingForcedColor: {r: 1, g: 1, b: 1, a: 1}
-    - _LightingShadowColor: {r: 0, g: 0, b: 0, a: 1}
+    - _LightingShadowColor: {r: 1, g: 1, b: 1, a: 1}
     - _LightingShadowMasksPan: {r: 0, g: 0, b: 0, a: 0}
     - _LightingWrappedColor: {r: 1, g: 1, b: 1, a: 1}
     - _LightngForcedDirection: {r: 0, g: 0, b: 0, a: 1}
