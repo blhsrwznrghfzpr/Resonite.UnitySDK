@@ -377,27 +377,21 @@ public class PoiyomiXiexeConverter
             return matcap;
         }
 
-        TextureImporter importer = null;
-        TextureImporterSettings originalSettings = new();
         if (!originalMatcap.isReadable)
         {
-            Debug.Log($"Matcap texture {originalMatcap.name} is not readable; temporarily re-importing it as readable.");
-            importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalMatcap)) as TextureImporter;
+            Debug.Log($"Matcap texture {originalMatcap.name} is not readable; re-importing it as readable.");
+            TextureImporter importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalMatcap)) as TextureImporter;
             if (importer == null)
             {
                 Debug.LogWarning($"Matcap texture {originalMatcap.name} could not be made readable; could not convert it to Opaque for Resonite's shader.");
                 return originalMatcap;
             }
 
-            importer.ReadTextureSettings(originalSettings);
-            TextureImporterSettings copySettings = new();
-            originalSettings.CopyTo(copySettings);
-            copySettings.readable = true;
-            importer.SetTextureSettings(copySettings);
-            if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
-            {
-                importer.SaveAndReimport();
-            }
+            TextureImporterSettings settings = new();
+            importer.ReadTextureSettings(settings);
+            settings.readable = true;
+            importer.SetTextureSettings(settings);
+            importer.SaveAndReimport();
         }
 
         var opaqueMatcap = AssetCache.MatcapTexture;
@@ -430,15 +424,6 @@ public class PoiyomiXiexeConverter
             opaqueMatcap.SetPixels(0, y, originalMatcap.width, 1, pixels);
         }
         opaqueMatcap.Apply();
-
-        if (importer != null)
-        {
-            importer.SetTextureSettings(originalSettings);
-            if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
-            {
-                importer.SaveAndReimport();
-            }
-        }
 
         return opaqueMatcap;
     }
@@ -527,23 +512,20 @@ public class PoiyomiXiexeConverter
             return ramp;
         }
 
-        TextureImporter importer = null;
-        TextureImporterSettings originalSettings = new();
         if (!originalRamp.isReadable)
         {
-            Debug.Log($"Shadow ramp texture {originalRamp.name} is not readable; temporarily re-importing it as readable.");
-            importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalRamp)) as TextureImporter;
+            Debug.Log($"Shadow ramp texture {originalRamp.name} is not readable; re-importing it as readable.");
+            TextureImporter importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalRamp)) as TextureImporter;
             if (importer == null)
             {
                 Debug.LogWarning($"Shadow ramp texture {originalRamp.name} could not be made readable; could not bake shadow tint and strength for Resonite's shader.");
                 return originalRamp;
             }
 
-            importer.ReadTextureSettings(originalSettings);
-            TextureImporterSettings copySettings = new();
-            originalSettings.CopyTo(copySettings);
-            copySettings.readable = true;
-            importer.SetTextureSettings(copySettings);
+            TextureImporterSettings settings = new();
+            importer.ReadTextureSettings(settings);
+            settings.readable = true;
+            importer.SetTextureSettings(settings);
             if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
             {
                 importer.SaveAndReimport();
@@ -579,15 +561,6 @@ public class PoiyomiXiexeConverter
             colorizedRamp.SetPixels(0, y, originalRamp.width, 1, pixels);
         }
         colorizedRamp.Apply();
-
-        if (importer != null)
-        {
-            importer.SetTextureSettings(originalSettings);
-            if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
-            {
-                importer.SaveAndReimport();
-            }
-        }
 
         return colorizedRamp;
     }

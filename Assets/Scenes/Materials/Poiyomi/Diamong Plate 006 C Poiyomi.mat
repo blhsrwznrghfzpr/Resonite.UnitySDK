@@ -1887,7 +1887,7 @@ Material:
     - _LightingForcedColorThemeIndex: 0
     - _LightingGradientEnd: 0.5
     - _LightingGradientStart: 0
-    - _LightingIgnoreAmbientColor: 0.9
+    - _LightingIgnoreAmbientColor: 1
     - _LightingIndirectUsesNormals: 0
     - _LightingMapMode: 0
     - _LightingMinLightBrightness: 0
@@ -2604,7 +2604,7 @@ Material:
     - _RimVRParallaxStrength: 1
     - _RimWidth: 0.4
     - _RoughnessAnisotropy: 1
-    - _SDFBlur: 0.131
+    - _SDFBlur: 0.1
     - _SDFShadingTextureUV: 0
     - _SFExposureOcclusion: 0
     - _SSIgnoreCastedShadows: 0
@@ -3715,7 +3715,7 @@ Material:
     - s_start_matcap1ApplyToAlpha: 0
     - s_start_matcap2ApplyToAlpha: 0
     - s_start_matcap3ApplyToAlpha: 0
-    - s_start_matcapApplyToAlpha: 0
+    - s_start_matcapApplyToAlpha: 1
     - s_start_outline_al_color: 0
     - s_start_parallaxAdvanced: 0
     - s_start_vertexRounding: 0
