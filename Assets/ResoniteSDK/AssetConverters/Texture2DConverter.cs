@@ -133,12 +133,8 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
 
             for (int y = 0; y < import.Height; y++)
             {
-                int ySource = y;
-                if (!SystemInfo.graphicsUVStartsAtTop)
-                {
-                    // On OpenGL systems (e.g. Linux) GetPixels returns them from bottom to top
-                    ySource = import.Height - 1 - y;
-                }
+                // GetPixels returns them from bottom to top, and ResoniteLink expects them from top to bottom
+                int ySource = import.Height - 1 - y;
                 for (int x = 0; x < import.Width; x++)
                 {
                     var c = pixels[x + ySource * import.Width];
@@ -161,12 +157,8 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
 
             for (int y = 0; y < import.Height; y++)
             {
-                int ySource = y;
-                if (!SystemInfo.graphicsUVStartsAtTop)
-                {
-                    // On OpenGL systems (e.g. Linux) GetPixels returns them from bottom to top
-                    ySource = import.Height - 1 - y;
-                }
+                // GetPixels returns them from bottom to top, and ResoniteLink expects them from top to bottom
+                int ySource = import.Height - 1 - y;
                 for (int x = 0; x < import.Width; x++)
                 {
                     var c = pixels[x + ySource * import.Width];
