@@ -165,8 +165,12 @@ public class PoiyomiPbsConverter
             return originalMetallic;
         }
 
+        Debug.Log($"Packed metallic map {originalMetallic.name} uses non-standard channel packing. Temporarily re-importing it with swizzled channels to match the format expected by Resonite.");
+
+        // Save original texture importer settings to use as a backup for later
         TextureImporterSettings originalSettings = new();
         importer.ReadTextureSettings(originalSettings);
+        // Create a copy of the importer settings, applying the swizzle specified by the Poiyomi material settings
         TextureImporterSettings copySettings = new();
         originalSettings.CopyTo(copySettings);
         copySettings.swizzleR = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, metallic, invertMetallic);
@@ -174,13 +178,11 @@ public class PoiyomiPbsConverter
         copySettings.swizzleB = TextureImporterSwizzle.Zero;
         copySettings.swizzleA = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, smoothness, invertSmoothness);
         copySettings.readable = true;
+        // Reimport the texture with the applied swizzle
         importer.SetTextureSettings(copySettings);
+        importer.SaveAndReimport();
 
-        if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
-        {
-            importer.SaveAndReimport();
-        }
-
+        // Setup a metallic texture in the asset cache to store the result of the swizzle
         var metallicTexture = AssetCache.MetallicTexture;
         if (metallicTexture == null || metallicTexture.width != originalMetallic.width || metallicTexture.height != originalMetallic.height)
         {
@@ -195,13 +197,12 @@ public class PoiyomiPbsConverter
             AssetCache.MetallicTexture = metallicTexture;
         }
 
+        // Make a pixel-wise copy of the swizzled texture
         Graphics.CopyTexture(originalMetallic, 0, 0, metallicTexture, 0, 0);
 
+        // Restore the original backed-up settings of the importer, to restore it to its original state in Unity
         importer.SetTextureSettings(originalSettings);
-        if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
-        {
-            importer.SaveAndReimport();
-        }
+        importer.SaveAndReimport();
 
         return metallicTexture;
     }

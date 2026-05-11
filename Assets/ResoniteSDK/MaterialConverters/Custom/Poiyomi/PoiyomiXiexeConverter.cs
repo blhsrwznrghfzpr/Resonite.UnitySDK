@@ -213,8 +213,12 @@ public class PoiyomiXiexeConverter
             return originalMetallic;
         }
 
+        Debug.Log($"Packed metallic map {originalMetallic.name} uses non-standard channel packing. Temporarily re-importing it with swizzled channels to match the format expected by Resonite.");
+
+        // Save original texture importer settings to use as a backup for later
         TextureImporterSettings originalSettings = new();
         importer.ReadTextureSettings(originalSettings);
+        // Create a copy of the importer settings, applying the swizzle specified by the Poiyomi material settings
         TextureImporterSettings copySettings = new();
         originalSettings.CopyTo(copySettings);
         copySettings.swizzleR = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, metallic, invertMetallic);
@@ -222,12 +226,11 @@ public class PoiyomiXiexeConverter
         copySettings.swizzleB = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, reflection, invertReflection);
         copySettings.swizzleA = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, specular, invertSpecular);
         copySettings.readable = true;
+        // Reimport the texture with the applied swizzle
         importer.SetTextureSettings(copySettings);
-        if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
-        {
-            importer.SaveAndReimport();
-        }
+        importer.SaveAndReimport();
 
+        // Setup a metallic texture in the asset cache to store the result of the swizzle
         var metallicTexture = AssetCache.MetallicTexture;
         if (metallicTexture == null || metallicTexture.width != originalMetallic.width || metallicTexture.height != originalMetallic.height)
         {
@@ -242,13 +245,12 @@ public class PoiyomiXiexeConverter
             AssetCache.MetallicTexture = metallicTexture;
         }
 
+        // Make a pixel-wise copy of the swizzled texture
         Graphics.CopyTexture(originalMetallic, 0, 0, metallicTexture, 0, 0);
 
+        // Restore the original backed-up settings of the importer, to restore it to its original state in Unity
         importer.SetTextureSettings(originalSettings);
-        if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
-        {
-            importer.SaveAndReimport();
-        }
+        importer.SaveAndReimport();
 
         return metallicTexture;
     }
@@ -377,20 +379,25 @@ public class PoiyomiXiexeConverter
             return matcap;
         }
 
+        TextureImporter importer = null;
+        TextureImporterSettings importerSettings = null;
         if (!originalMatcap.isReadable)
         {
-            Debug.Log($"Matcap texture {originalMatcap.name} is not readable; re-importing it as readable.");
-            TextureImporter importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalMatcap)) as TextureImporter;
+            Debug.Log($"Matcap texture {originalMatcap.name} is not readable; re-importing it temporarily as readable.");
+            importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalMatcap)) as TextureImporter;
             if (importer == null)
             {
                 Debug.LogWarning($"Matcap texture {originalMatcap.name} could not be made readable; could not convert it to Opaque for Resonite's shader.");
                 return originalMatcap;
             }
 
-            TextureImporterSettings settings = new();
-            importer.ReadTextureSettings(settings);
-            settings.readable = true;
-            importer.SetTextureSettings(settings);
+            // Reimport asset with readable set to true to be able to call GetPixels
+            importerSettings = new();
+            importer.ReadTextureSettings(importerSettings);
+            TextureImporterSettings readableSettings = new();
+            importerSettings.CopyTo(readableSettings);
+            readableSettings.readable = true;
+            importer.SetTextureSettings(readableSettings);
             importer.SaveAndReimport();
         }
 
@@ -424,6 +431,13 @@ public class PoiyomiXiexeConverter
             opaqueMatcap.SetPixels(0, y, originalMatcap.width, 1, pixels);
         }
         opaqueMatcap.Apply();
+
+        if (importer != null)
+        {
+            // Restore asset to non-readable state
+            importer.SetTextureSettings(importerSettings);
+            importer.SaveAndReimport();
+        }
 
         return opaqueMatcap;
     }
@@ -512,24 +526,26 @@ public class PoiyomiXiexeConverter
             return ramp;
         }
 
+        TextureImporter importer = null;
+        TextureImporterSettings importerSettings = null;
         if (!originalRamp.isReadable)
         {
-            Debug.Log($"Shadow ramp texture {originalRamp.name} is not readable; re-importing it as readable.");
-            TextureImporter importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalRamp)) as TextureImporter;
+            Debug.Log($"Shadow ramp texture {originalRamp.name} is not readable; re-importing it temporarily as readable.");
+            importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalRamp)) as TextureImporter;
             if (importer == null)
             {
                 Debug.LogWarning($"Shadow ramp texture {originalRamp.name} could not be made readable; could not bake shadow tint and strength for Resonite's shader.");
                 return originalRamp;
             }
 
-            TextureImporterSettings settings = new();
-            importer.ReadTextureSettings(settings);
-            settings.readable = true;
-            importer.SetTextureSettings(settings);
-            if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
-            {
-                importer.SaveAndReimport();
-            }
+            // Reimport asset with readable set to true to be able to call GetPixels
+            importerSettings = new();
+            importer.ReadTextureSettings(importerSettings);
+            TextureImporterSettings readableSettings = new();
+            importerSettings.CopyTo(readableSettings);
+            readableSettings.readable = true;
+            importer.SetTextureSettings(readableSettings);
+            importer.SaveAndReimport();
         }
 
         var colorizedRamp = AssetCache.ShadowRampTexture;
@@ -561,6 +577,13 @@ public class PoiyomiXiexeConverter
             colorizedRamp.SetPixels(0, y, originalRamp.width, 1, pixels);
         }
         colorizedRamp.Apply();
+
+        if (importer != null)
+        {
+            // Restore asset to non-readable state
+            importer.SetTextureSettings(importerSettings);
+            importer.SaveAndReimport();
+        }
 
         return colorizedRamp;
     }
