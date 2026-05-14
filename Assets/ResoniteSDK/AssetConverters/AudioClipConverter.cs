@@ -60,11 +60,47 @@ public class AudioClipConverter : AssetConverter<StaticAudioClipWrapper, StaticA
 
         var dataArray = new float[rawData.Length];
 
+        Action revert = null;
+
+        // We can't read audio data from streaming audio clips directly, this will throw an exception
+        // Convert them temporarily to decompressed first, so we can access the data and extract it
+        if (audioClip.loadType == AudioClipLoadType.Streaming)
+        {
+            string path = AssetDatabase.GetAssetPath(audioClip);
+            var importer = AssetImporter.GetAtPath(path);
+
+            switch(importer)
+            {
+                case AudioImporter audioImporter:
+                    var settings = audioImporter.defaultSampleSettings;
+                    settings.loadType = AudioClipLoadType.DecompressOnLoad;
+                    audioImporter.defaultSampleSettings = settings;
+
+                    audioImporter.SaveAndReimport();
+
+                    revert = () =>
+                    {
+                        var settings = audioImporter.defaultSampleSettings;
+                        settings.loadType = AudioClipLoadType.Streaming;
+                        audioImporter.defaultSampleSettings = settings;
+
+                        audioImporter.SaveAndReimport();
+                    };
+                    break;
+
+                default:
+                    throw new NotImplementedException($"Unsupported importer type: {importer?.GetType().FullName}");
+            }
+        }
+
         if (!audioClip.GetData(dataArray, 0))
             throw new Exception($"Failed to read audio data from {audioClip}. Channels: {import.ChannelCount}, " +
                 $"SampleCount: {import.SampleCount}, SampleRate: {import.SampleRate}");
 
         dataArray.AsSpan().CopyTo(rawData);
+
+        // Revert any changes made to the asset during the import
+        revert?.Invoke();
 
         return import;
     }
