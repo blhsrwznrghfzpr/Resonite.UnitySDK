@@ -115,15 +115,15 @@ public class SceneConverter : IConversionContext
 
     #region ASSETS
 
-    public FrooxEngine.IAssetProvider<FrooxEngine.Mesh> GetMesh(UnityEngine.Mesh mesh)
+    public FrooxEngine.IAssetProvider<FrooxEngine.Mesh> GetMesh(UnityEngine.Mesh mesh, AssetMessagePostProcessor postProcessor = null)
     {
         if (mesh == null)
             return null;
 
-        return _assetConverter.GetMesh(mesh);
+        return _assetConverter.GetMesh(mesh, postProcessor);
     }
 
-    public FrooxEngine.IAssetProvider<FrooxEngine.ITexture2D> GetITexture2D(UnityEngine.Texture texture)
+    public FrooxEngine.IAssetProvider<FrooxEngine.ITexture2D> GetITexture2D(UnityEngine.Texture texture, AssetMessagePostProcessor postProcessor = null)
     {
         if (texture == null)
             return null;
@@ -131,7 +131,7 @@ public class SceneConverter : IConversionContext
         switch (texture)
         {
             case UnityEngine.Texture2D texture2D:
-                return (FrooxEngine.IAssetProvider<FrooxEngine.ITexture2D>)GetTexture2D(texture2D);
+                return (FrooxEngine.IAssetProvider<FrooxEngine.ITexture2D>)GetTexture2D(texture2D, postProcessor);
 
             default:
                 Debug.LogWarning($"Unsupported ITexture2D type: {texture.GetType()}");
@@ -139,7 +139,7 @@ public class SceneConverter : IConversionContext
         }
     }
 
-    public FrooxEngine.IAssetProvider<FrooxEngine.ITexture> GetITexture(UnityEngine.Texture texture)
+    public FrooxEngine.IAssetProvider<FrooxEngine.ITexture> GetITexture(UnityEngine.Texture texture, AssetMessagePostProcessor postProcessor = null)
     {
         if (texture == null)
             return null;
@@ -147,10 +147,10 @@ public class SceneConverter : IConversionContext
         switch (texture)
         {
             case UnityEngine.Texture2D texture2D:
-                return (FrooxEngine.IAssetProvider<FrooxEngine.ITexture>)GetTexture2D(texture2D);
+                return (FrooxEngine.IAssetProvider<FrooxEngine.ITexture>)GetTexture2D(texture2D, postProcessor);
 
             case UnityEngine.Cubemap cubemap:
-                return (FrooxEngine.IAssetProvider<FrooxEngine.ITexture>)GetCubemap(cubemap);
+                return (FrooxEngine.IAssetProvider<FrooxEngine.ITexture>)GetCubemap(cubemap, postProcessor);
 
             default:
                 Debug.LogWarning($"Unsupported ITexture2D type: {texture.GetType()}");
@@ -158,20 +158,20 @@ public class SceneConverter : IConversionContext
         }
     }
 
-    public FrooxEngine.IAssetProvider<FrooxEngine.Texture2D> GetTexture2D(UnityEngine.Texture2D texture)
+    public FrooxEngine.IAssetProvider<FrooxEngine.Texture2D> GetTexture2D(UnityEngine.Texture2D texture, AssetMessagePostProcessor postProcessor = null)
     {
         if (texture == null)
             return null;
 
-        return _assetConverter.GetTexture2D(texture);
+        return _assetConverter.GetTexture2D(texture, postProcessor);
     }
 
-    public FrooxEngine.IAssetProvider<FrooxEngine.Cubemap> GetCubemap(UnityEngine.Cubemap cubemap)
+    public FrooxEngine.IAssetProvider<FrooxEngine.Cubemap> GetCubemap(UnityEngine.Cubemap cubemap, AssetMessagePostProcessor postProcessor = null)
     {
         if (cubemap == null)
             return null;
 
-        return _assetConverter.GetCubemap(cubemap);
+        return _assetConverter.GetCubemap(cubemap, postProcessor);
     }
 
     public IAssetProvider<FrooxEngine.Material> GetMaterial(UnityEngine.Material material)
@@ -182,12 +182,12 @@ public class SceneConverter : IConversionContext
         return _assetConverter.GetMaterial(material);
     }
 
-    public IAssetProvider<FrooxEngine.AudioClip> GetAudioClip(UnityEngine.AudioClip audioClip)
+    public IAssetProvider<FrooxEngine.AudioClip> GetAudioClip(UnityEngine.AudioClip audioClip, AssetMessagePostProcessor postProcessor = null)
     {
         if (audioClip == null)
             return null;
 
-        return _assetConverter.GetAudioClip(audioClip);
+        return _assetConverter.GetAudioClip(audioClip, postProcessor);
     }
 
     public void EnsureAssetConverter()

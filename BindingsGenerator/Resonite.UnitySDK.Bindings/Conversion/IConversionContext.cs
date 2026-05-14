@@ -24,13 +24,14 @@ public interface IConversionContext
 
     void RunOnConverted(UnityEngine.Component component, System.Action action);
 
-    IAssetProvider<FrooxEngine.Mesh> GetMesh(UnityEngine.Mesh mesh);
-    IAssetProvider<FrooxEngine.ITexture> GetITexture(UnityEngine.Texture texture);
-    IAssetProvider<FrooxEngine.ITexture2D> GetITexture2D(UnityEngine.Texture texture);
-    IAssetProvider<FrooxEngine.Texture2D> GetTexture2D(UnityEngine.Texture2D texture);
-    IAssetProvider<FrooxEngine.Cubemap> GetCubemap(UnityEngine.Cubemap cubemap);
+    IAssetProvider<FrooxEngine.Mesh> GetMesh(UnityEngine.Mesh mesh, AssetMessagePostProcessor postProcessor = null);
+    IAssetProvider<FrooxEngine.ITexture> GetITexture(UnityEngine.Texture texture, AssetMessagePostProcessor postProcessor = null);
+    IAssetProvider<FrooxEngine.ITexture2D> GetITexture2D(UnityEngine.Texture texture, AssetMessagePostProcessor postProcessor = null);
+    IAssetProvider<FrooxEngine.Texture2D> GetTexture2D(UnityEngine.Texture2D texture, AssetMessagePostProcessor postProcessor = null);
+    IAssetProvider<FrooxEngine.Cubemap> GetCubemap(UnityEngine.Cubemap cubemap, AssetMessagePostProcessor postProcessor = null);
+    IAssetProvider<FrooxEngine.AudioClip> GetAudioClip(UnityEngine.AudioClip audioClip, AssetMessagePostProcessor postProcessor = null);
+
     IAssetProvider<FrooxEngine.Material> GetMaterial(UnityEngine.Material material);
-    IAssetProvider<FrooxEngine.AudioClip> GetAudioClip(UnityEngine.AudioClip audioClip);
 
     #endregion
 

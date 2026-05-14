@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
-public delegate void AssetMessagePostProcessor(ResoniteLink.Message message);
-
 public abstract class AssetConverter : MonoBehaviour
 {
     public AssetMessagePostProcessor PostProcessor;

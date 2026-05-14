@@ -1,0 +1,1 @@
+﻿public delegate void AssetMessagePostProcessor(ResoniteLink.Message message);
