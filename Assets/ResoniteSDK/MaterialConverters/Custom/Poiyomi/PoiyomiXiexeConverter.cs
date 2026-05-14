@@ -84,10 +84,6 @@ public class PoiyomiXiexeConverter
             {
                 Xiexe.VertexColorInterpolationSpace = Renderite.Shared.ColorProfile.Linear;
             }
-            else if (Material.GetFloat("_MainUseVertexColorAlpha") >= 0.5)
-            {
-                Xiexe.VertexColorInterpolationSpace = Renderite.Shared.ColorProfile.sRGBAlpha;
-            }
             else
             {
                 Xiexe.VertexColorInterpolationSpace = Renderite.Shared.ColorProfile.sRGB;
@@ -279,7 +275,7 @@ public class PoiyomiXiexeConverter
             Xiexe.Matcap = Context.GetITexture2D(OpacifyMatcap(Material.GetTexture("_Matcap")));
             var matcapColor = Material.GetColor("_MatcapColor");
             var alpha = matcapColor.a;
-            matcapColor *= Material.GetFloat("_MatcapIntensity");
+            matcapColor *= Material.GetFloat("_MatcapIntensity") * alpha;
             matcapColor.a = alpha;
             Xiexe.MatcapTint = matcapColor.ToColorX_Auto();
             return;
@@ -312,25 +308,28 @@ public class PoiyomiXiexeConverter
             {
                 UnityEngine.Texture2D.Destroy(opaqueMatcap);
             }
-            opaqueMatcap = new(originalMatcap.width, originalMatcap.height, TextureFormat.RGBA32, false)
+            opaqueMatcap = new(originalMatcap.width, originalMatcap.height, TextureFormat.RGBA32, false, false, true)
             {
                 name = "PoiyomiConverter opaque matcap texture"
             };
             AssetCache.MatcapTexture = opaqueMatcap;
         }
 
-        var alpha = Material.GetColor("_MatcapColor").a;
-        var pixels = originalMatcap.GetPixels32();
-        for (int i = 0; i < pixels.Length; i++)
+        Color[] pixels;
+        for (int y = 0; y < originalMatcap.height; y++)
         {
-            // Add black background inversely proportional to alpha
-            Color p = pixels[i];
-            var pa = p.a;
-            p = p * pa * alpha;
-            p.a = pa;
-            pixels[i] = p;
+            pixels = originalMatcap.GetPixels(0, y, originalMatcap.width, 1);
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                // Add black background inversely proportional to alpha
+                Color p = pixels[i];
+                var pa = p.a;
+                p *= pa;
+                p.a = pa;
+                pixels[i] = p;
+            }
+            opaqueMatcap.SetPixels(0, y, originalMatcap.width, 1, pixels);
         }
-        opaqueMatcap.SetPixels32(pixels);
         opaqueMatcap.Apply();
         return opaqueMatcap;
     }
@@ -460,7 +459,7 @@ public class PoiyomiXiexeConverter
             {
                 UnityEngine.Texture2D.Destroy(ramp);
             }
-            ramp = new(512, 4, TextureFormat.RGBA32, false)
+            ramp = new(512, 4, TextureFormat.RGBA32, false, false, true)
             {
                 name = "PoiyomiConverter multilayer math ramp"
             };
@@ -555,7 +554,7 @@ public class PoiyomiXiexeConverter
             {
                 UnityEngine.Texture2D.Destroy(ramp);
             }
-            ramp = new(512, 4, TextureFormat.RGBA32, false)
+            ramp = new(512, 4, TextureFormat.RGBA32, false, false, true)
             {
                 name = "PoiyomiConverter shade map math ramp"
             };
