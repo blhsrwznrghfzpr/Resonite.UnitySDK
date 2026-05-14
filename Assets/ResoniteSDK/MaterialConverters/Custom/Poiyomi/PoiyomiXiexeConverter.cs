@@ -1,4 +1,5 @@
 using FrooxEngine;
+using UnityEditor;
 using UnityEngine;
 
 // This converter is a prototype meant to convert materials using
@@ -13,12 +14,12 @@ using UnityEngine;
 
 public class PoiyomiXiexeConverter
 {
-    private FrooxEngine.XiexeToonMaterial Xiexe;
+    private XiexeToonMaterial Xiexe;
     private UnityEngine.Material Material;
     private IConversionContext Context;
     private PoiyomiAssetCache AssetCache;
 
-    public PoiyomiXiexeConverter(FrooxEngine.XiexeToonMaterial Xiexe, UnityEngine.Material Material, IConversionContext Context, PoiyomiAssetCache AssetCache)
+    public PoiyomiXiexeConverter(XiexeToonMaterial Xiexe, UnityEngine.Material Material, IConversionContext Context, PoiyomiAssetCache AssetCache)
     {
         this.Xiexe = Xiexe;
         this.Material = Material;
@@ -390,13 +391,16 @@ public class PoiyomiXiexeConverter
             case PoiyomiLightingMode.ShadeMap:
                 Xiexe.ShadowRamp = Context.GetITexture2D(ShadeMapShadowRamp());
                 break;
+            case PoiyomiLightingMode.Skin:
+                Xiexe.ShadowRamp = Context.GetITexture2D(TintColoredShadowRamp(SkinShadowRamp(), true));
+                break;
             default:
                 Xiexe.ShadowRamp = null;
                 break;
         }
     }
 
-    private UnityEngine.Texture TintColoredShadowRamp(UnityEngine.Texture ramp)
+    private Texture TintColoredShadowRamp(Texture ramp, bool tintWhite = false)
     {
         if (ramp == null)
         {
@@ -422,21 +426,27 @@ public class PoiyomiXiexeConverter
             {
                 UnityEngine.Texture2D.Destroy(colorizedRamp);
             }
-            colorizedRamp = new(originalRamp.width, originalRamp.height, TextureFormat.RGBA32, false)
+            colorizedRamp = new(originalRamp.width, originalRamp.height, TextureFormat.RGBA32, false, false, true)
             {
                 name = "PoiyomiConverter colorized shadow ramp"
             };
             AssetCache.ShadowRampTexture = colorizedRamp;
         }
 
-        var pixels = originalRamp.GetPixels32();
-        for (int i = 0; i < pixels.Length; i++)
+
+        Color[] pixels;
+        for (int y = 0; y < originalRamp.height; y++)
         {
-            Color p = pixels[i];
-            p = Color.Lerp(p * color, p, p.grayscale);
-            pixels[i] = Color.Lerp(Color.white, p, strength);
+            pixels = originalRamp.GetPixels(0, y, originalRamp.width, 1);
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color p = pixels[i];
+                float tintFactor = tintWhite ? 0 : p.grayscale;
+                p = Color.Lerp(p * color, p, tintFactor);
+                pixels[i] = Color.Lerp(Color.white, p, strength);
+            }
+            colorizedRamp.SetPixels(0, y, originalRamp.width, 1, pixels);
         }
-        colorizedRamp.SetPixels32(pixels);
         colorizedRamp.Apply();
         return colorizedRamp;
     }
@@ -589,6 +599,15 @@ public class PoiyomiXiexeConverter
         ramp.SetPixels32(pixels);
         ramp.Apply();
         return ramp;
+    }
+
+    // ResoniteSDK/MaterialConverters/Custom/Poiyomi/ShadowRamps/T_ToonSkin_SR.png
+    private const string TOON_SKIN_SR_GUID = "8262fdf60a50a1f73acf19f9ce371e89";
+
+    private UnityEngine.Texture SkinShadowRamp()
+    {
+        string toonSkinSrPath = AssetDatabase.GUIDToAssetPath(TOON_SKIN_SR_GUID);
+        return AssetDatabase.LoadAssetAtPath(toonSkinSrPath, typeof(Texture)) as Texture;
     }
 
     private void UpdateShadowRim()

@@ -22,8 +22,7 @@ public static class PoiyomiLightingModeMethods
         {
             case PoiyomiLightingMode.Realistic:
             case PoiyomiLightingMode.Cloth:
-            case PoiyomiLightingMode.Skin:
-            case PoiyomiLightingMode.Wrapped:
+            case PoiyomiLightingMode.Wrapped: // That one looks like it could be simulated with a shadow ramp?
             case PoiyomiLightingMode.SDF:
                 return true;
             default:
