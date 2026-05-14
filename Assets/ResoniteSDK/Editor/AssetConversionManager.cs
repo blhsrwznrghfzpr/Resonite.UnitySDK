@@ -1,3 +1,4 @@
+using BepuPhysics.Collidables;
 using FrooxEngine;
 using ResoniteLink;
 using System;
@@ -6,6 +7,22 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+
+public struct AssetMap<A> : IEquatable<AssetMap<A>>
+    where A : UnityEngine.Object
+{
+    public readonly A Asset;
+    public readonly AssetMessagePostProcessor PostProcessor;
+
+    public AssetMap(A asset, AssetMessagePostProcessor postProcessor)
+    {
+        this.Asset = asset;
+        PostProcessor = postProcessor;
+    }
+
+    public bool Equals(AssetMap<A> other) => Asset == other.Asset && PostProcessor == other.PostProcessor;
+    public override int GetHashCode() => HashCode.Combine(Asset, PostProcessor);
+}
 
 public class AssetConversionManager
 {
@@ -16,10 +33,10 @@ public class AssetConversionManager
 
     public bool HasPendingChanges => _scheduledConversions.Count > 0 || _updatedAssetProviderRoots.Count > 0;
 
-    Dictionary<UnityEngine.Mesh, MeshConverter> _meshes = new Dictionary<UnityEngine.Mesh, MeshConverter>();
-    Dictionary<UnityEngine.Texture2D, Texture2DConverter> _textures = new Dictionary<UnityEngine.Texture2D, Texture2DConverter>();
-    Dictionary<UnityEngine.Cubemap, CubemapConverter> _cubemaps = new Dictionary<UnityEngine.Cubemap, CubemapConverter>();
-    Dictionary<UnityEngine.AudioClip, AudioClipConverter> _audioClips = new Dictionary<UnityEngine.AudioClip, AudioClipConverter>();
+    Dictionary<AssetMap<UnityEngine.Mesh>, MeshConverter> _meshes = new Dictionary<AssetMap<UnityEngine.Mesh>, MeshConverter>();
+    Dictionary<AssetMap<UnityEngine.Texture2D>, Texture2DConverter> _textures = new Dictionary<AssetMap<UnityEngine.Texture2D>, Texture2DConverter>();
+    Dictionary<AssetMap<UnityEngine.Cubemap>, CubemapConverter> _cubemaps = new Dictionary<AssetMap<UnityEngine.Cubemap>, CubemapConverter>();
+    Dictionary<AssetMap<UnityEngine.AudioClip>, AudioClipConverter> _audioClips = new Dictionary<AssetMap<UnityEngine.AudioClip>, AudioClipConverter>();
 
     Dictionary<UnityEngine.Material, ResoniteMaterialConverter> _materials = new Dictionary<UnityEngine.Material, ResoniteMaterialConverter>();
     Dictionary<UnityEngine.Material, FrooxEngine.IAssetProvider<FrooxEngine.Material>> _cachedMaterials = new Dictionary<UnityEngine.Material, IAssetProvider<FrooxEngine.Material>>();
@@ -55,7 +72,7 @@ public class AssetConversionManager
             AssetsRoot = (new GameObject(ASSETS_ROOT_NAME)).transform; // Create new root
     }
 
-    void ScanConverters<TProvider, TWrapper, TUnity, TResonite, TConverter>(Dictionary<TUnity, TConverter> map)
+    void ScanConverters<TProvider, TWrapper, TUnity, TResonite, TConverter>(Dictionary<AssetMap<TUnity>, TConverter> map)
         where TProvider : FrooxEngine.Component, IAssetProvider<TResonite>, new()
         where TWrapper : ResoniteComponent<TProvider>
         where TResonite : FrooxEngine.IAsset
@@ -72,7 +89,7 @@ public class AssetConversionManager
                 continue;
             }
 
-            map.Add(converter.Source, converter);
+            map.Add(new AssetMap<TUnity>(converter.Source, converter.PostProcessor), converter);
         }
     }
 
@@ -104,30 +121,35 @@ public class AssetConversionManager
         _checkedConverters.Clear();
     }
 
-    public bool HasMesh(UnityEngine.Mesh mesh) => _meshes.ContainsKey(mesh);
-    public bool HasTexture2D(UnityEngine.Texture2D texture2D) => _textures.ContainsKey(texture2D);
-    public bool HasCubemap(UnityEngine.Cubemap cubemap) => _cubemaps.ContainsKey(cubemap);
-    public bool HasAudioClip(UnityEngine.AudioClip audioClip) => _audioClips.ContainsKey(audioClip);
-    public bool HasMaterial(UnityEngine.Material material) => _materials.ContainsKey(material);
+    public bool HasMesh(UnityEngine.Mesh mesh, AssetMessagePostProcessor postProcessor = null) =>
+        _meshes.ContainsKey(new AssetMap<UnityEngine.Mesh>(mesh, postProcessor));
 
-    public IAssetProvider<FrooxEngine.Mesh> GetMesh(UnityEngine.Mesh mesh) =>
+    public bool HasTexture2D(UnityEngine.Texture2D texture2D, AssetMessagePostProcessor postProcessor = null) =>
+        _textures.ContainsKey(new AssetMap<UnityEngine.Texture2D>(texture2D, postProcessor));
+    public bool HasCubemap(UnityEngine.Cubemap cubemap, AssetMessagePostProcessor postProcessor = null) =>
+        _cubemaps.ContainsKey(new AssetMap<UnityEngine.Cubemap>(cubemap, postProcessor));
+    public bool HasAudioClip(UnityEngine.AudioClip audioClip, AssetMessagePostProcessor postProcessor = null) => 
+        _audioClips.ContainsKey(new AssetMap<UnityEngine.AudioClip>(audioClip, postProcessor));
+    public bool HasMaterial(UnityEngine.Material material, AssetMessagePostProcessor postProcessor = null) => _materials.ContainsKey(material);
+
+    public IAssetProvider<FrooxEngine.Mesh> GetMesh(UnityEngine.Mesh mesh, AssetMessagePostProcessor postProcessor = null) =>
         GetAsset<StaticMesh, StaticMeshWrapper, UnityEngine.Mesh, FrooxEngine.Mesh, MeshConverter>(
-            mesh, _meshes);
+            mesh, postProcessor, _meshes);
 
-    public IAssetProvider<FrooxEngine.Texture2D> GetTexture2D(UnityEngine.Texture2D texture) =>
+    public IAssetProvider<FrooxEngine.Texture2D> GetTexture2D(UnityEngine.Texture2D texture, AssetMessagePostProcessor postProcessor = null) =>
         GetAsset<StaticTexture2D, StaticTexture2DWrapper, UnityEngine.Texture2D, FrooxEngine.Texture2D, Texture2DConverter>(
-            texture, _textures);
+            texture, postProcessor, _textures);
 
-    public IAssetProvider<FrooxEngine.Cubemap> GetCubemap(UnityEngine.Cubemap cubemap) =>
+    public IAssetProvider<FrooxEngine.Cubemap> GetCubemap(UnityEngine.Cubemap cubemap, AssetMessagePostProcessor postProcessor = null) =>
         GetAsset<StaticCubemap, StaticCubemapWrapper, UnityEngine.Cubemap, FrooxEngine.Cubemap, CubemapConverter>(
-            cubemap, _cubemaps);
+            cubemap, postProcessor, _cubemaps);
 
-    public IAssetProvider<FrooxEngine.AudioClip> GetAudioClip(UnityEngine.AudioClip audioClip) =>
+    public IAssetProvider<FrooxEngine.AudioClip> GetAudioClip(UnityEngine.AudioClip audioClip, AssetMessagePostProcessor postProcessor = null) =>
         GetAsset<StaticAudioClip, StaticAudioClipWrapper, UnityEngine.AudioClip, FrooxEngine.AudioClip, AudioClipConverter>(
-            audioClip, _audioClips);
+            audioClip, postProcessor, _audioClips);
 
-    TProvider GetAsset<TProvider, TWrapper, TUnity, TResonite, TConverter>(TUnity unity,
-        Dictionary<TUnity, TConverter> converters)
+    TProvider GetAsset<TProvider, TWrapper, TUnity, TResonite, TConverter>(TUnity unity, AssetMessagePostProcessor postProcessor,
+        Dictionary<AssetMap<TUnity>, TConverter> converters)
         where TProvider : FrooxEngine.Component, IAssetProvider<TResonite>, new()
         where TWrapper : ResoniteComponent<TProvider>
         where TResonite : FrooxEngine.IAsset
@@ -139,19 +161,21 @@ public class AssetConversionManager
 
         bool needsToConvert = false;
 
-        if (!converters.TryGetValue(unity, out var converter))
+        var identity = new AssetMap<TUnity>(unity, postProcessor);
+
+        if (!converters.TryGetValue(identity, out var converter))
         {
             // There's no active converter for this, so create one
             var go = new GameObject();
             go.transform.parent = AssetsRoot;
 
             converter = go.AddComponent<TConverter>();
-            converter.Initialize(unity);
+            converter.Initialize(unity, postProcessor);
 
             // Since it's brand new it needs to be converted for the first time
             needsToConvert = true;
 
-            converters.Add(unity, converter);
+            converters.Add(identity, converter);
         }
         else if (_checkedConverters.Add(converter) && converter.HasAssetChanged())
         {

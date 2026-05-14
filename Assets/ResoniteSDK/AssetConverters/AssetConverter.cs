@@ -5,14 +5,21 @@ using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
+public delegate void AssetMessagePostProcessor(ResoniteLink.Message message);
+
 public abstract class AssetConverter : MonoBehaviour
 {
+    public AssetMessagePostProcessor PostProcessor;
+
     public ulong LastTimestamp;
 
     public void Convert(IConversionContext context, LinkInterface link)
     {
         var data = GenerateConversion();
         var name = AssetName;
+
+        // Run any postprocessing
+        PostProcessor?.Invoke(data);
 
         // Store the timestamp after the conversion
         // The timestamp can change during the conversion generation, so we make sure to change it after
@@ -66,7 +73,7 @@ public abstract class AssetConverter<TWrapper, TProvider, TUnity, TResonite> : A
     public TUnity Source;
     public TWrapper Provider;
 
-    public void Initialize(TUnity source)
+    public void Initialize(TUnity source, AssetMessagePostProcessor postProcessor)
     {
         if (Source != null || Provider != null)
             throw new InvalidOperationException("This converter has already been initialized");
@@ -75,6 +82,7 @@ public abstract class AssetConverter<TWrapper, TProvider, TUnity, TResonite> : A
             throw new ArgumentNullException(nameof(source));
 
         this.Source = source;
+        this.PostProcessor = postProcessor;
 
         gameObject.name = $"{typeof(TResonite).Name} - {AssetName}";
 
