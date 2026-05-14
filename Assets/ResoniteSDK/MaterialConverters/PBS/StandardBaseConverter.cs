@@ -1,4 +1,5 @@
 using FrooxEngine;
+using System.Collections.Generic;
 using UnityEngine;
 
 public abstract class StandardBaseConverter<TWrapper, TMaterial> : ResoniteMaterialConverter
@@ -6,6 +7,23 @@ public abstract class StandardBaseConverter<TWrapper, TMaterial> : ResoniteMater
     where TMaterial : FrooxEngine.PBS_Material, new()
 {
     public TWrapper PBS;
+
+    protected static readonly IEnumerable<string> BaseSupportedProperties = new List<string>()
+    {
+        "_Cutoff",
+        "_Color",
+
+        "_BumpMap",
+        "_BumpScale",
+
+        "_Parallax",
+        "_ParallaxMap",
+
+        "_OcclusionMap",
+
+        "_EmissionColor",
+        "_EmissionMap",
+    };
 
     public override IAssetProvider<FrooxEngine.Material> UpdateConversion(UnityEngine.Material material, IConversionContext context)
     {

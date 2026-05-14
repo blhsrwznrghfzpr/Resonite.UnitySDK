@@ -1,7 +1,8 @@
 using FrooxEngine;
+using System.Collections.Generic;
 using UnityEngine;
 
-[MaterialConverter(false, 
+[MaterialConverter(true, 
     "Unlit/Transparent", 
     "Unlit/Transparent Cutout",
     "Unlit/Texture",
@@ -11,6 +12,13 @@ using UnityEngine;
 public class UnlitTransparentConverter : ResoniteMaterialConverter
 {
     public FrooxEngine.UnlitMaterialWrapper Unlit;
+
+    protected static readonly IEnumerable<string> SupportedProperties = new List<string>()
+    {
+        "_Color",
+        "_Cutoff",
+        "_Cull",
+    };
 
     public override IAssetProvider<FrooxEngine.Material> UpdateConversion(UnityEngine.Material material, IConversionContext context)
     {
@@ -83,5 +91,13 @@ public class UnlitTransparentConverter : ResoniteMaterialConverter
         }
 
         return data;
+    }
+
+    public static float? EvaluateHeuristicConversion(UnityEngine.Material material)
+    {
+        if (material.shader == null)
+            return null;
+
+        return PropertyBasedCompatibilityEvaluator.ComputeCompatibility(material, SupportedProperties);
     }
 }
