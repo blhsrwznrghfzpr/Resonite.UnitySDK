@@ -22,7 +22,7 @@ public class PoiyomiConverter : ResoniteMaterialConverter
 
     public static float? EvaluateHeuristicConversion(UnityEngine.Material material)
     {
-        if (!material.shader.name.StartsWith(".poiyomi/"))
+        if (!material.shader.name.Contains(".poiyomi/"))
         {
             return null;
         }

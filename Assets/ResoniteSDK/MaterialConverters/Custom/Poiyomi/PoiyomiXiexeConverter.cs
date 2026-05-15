@@ -1,4 +1,5 @@
 using FrooxEngine;
+using UnityEditor;
 using UnityEngine;
 
 // This converter is a prototype meant to convert materials using
@@ -13,12 +14,12 @@ using UnityEngine;
 
 public class PoiyomiXiexeConverter
 {
-    private FrooxEngine.XiexeToonMaterial Xiexe;
+    private XiexeToonMaterial Xiexe;
     private UnityEngine.Material Material;
     private IConversionContext Context;
     private PoiyomiAssetCache AssetCache;
 
-    public PoiyomiXiexeConverter(FrooxEngine.XiexeToonMaterial Xiexe, UnityEngine.Material Material, IConversionContext Context, PoiyomiAssetCache AssetCache)
+    public PoiyomiXiexeConverter(XiexeToonMaterial Xiexe, UnityEngine.Material Material, IConversionContext Context, PoiyomiAssetCache AssetCache)
     {
         this.Xiexe = Xiexe;
         this.Material = Material;
@@ -82,10 +83,6 @@ public class PoiyomiXiexeConverter
             if (Material.GetFloat("_MainVertexColoringLinearSpace") > 0)
             {
                 Xiexe.VertexColorInterpolationSpace = Renderite.Shared.ColorProfile.Linear;
-            }
-            else if (Material.GetFloat("_MainUseVertexColorAlpha") >= 0.5)
-            {
-                Xiexe.VertexColorInterpolationSpace = Renderite.Shared.ColorProfile.sRGBAlpha;
             }
             else
             {
@@ -278,7 +275,7 @@ public class PoiyomiXiexeConverter
             Xiexe.Matcap = Context.GetITexture2D(OpacifyMatcap(Material.GetTexture("_Matcap")));
             var matcapColor = Material.GetColor("_MatcapColor");
             var alpha = matcapColor.a;
-            matcapColor *= Material.GetFloat("_MatcapIntensity");
+            matcapColor *= Material.GetFloat("_MatcapIntensity") * alpha;
             matcapColor.a = alpha;
             Xiexe.MatcapTint = matcapColor.ToColorX_Auto();
             return;
@@ -311,25 +308,28 @@ public class PoiyomiXiexeConverter
             {
                 UnityEngine.Texture2D.Destroy(opaqueMatcap);
             }
-            opaqueMatcap = new(originalMatcap.width, originalMatcap.height, TextureFormat.RGBA32, false)
+            opaqueMatcap = new(originalMatcap.width, originalMatcap.height, TextureFormat.RGBA32, false, false, true)
             {
                 name = "PoiyomiConverter opaque matcap texture"
             };
             AssetCache.MatcapTexture = opaqueMatcap;
         }
 
-        var alpha = Material.GetColor("_MatcapColor").a;
-        var pixels = originalMatcap.GetPixels32();
-        for (int i = 0; i < pixels.Length; i++)
+        Color[] pixels;
+        for (int y = 0; y < originalMatcap.height; y++)
         {
-            // Add black background inversely proportional to alpha
-            Color p = pixels[i];
-            var pa = p.a;
-            p = p * pa * alpha;
-            p.a = pa;
-            pixels[i] = p;
+            pixels = originalMatcap.GetPixels(0, y, originalMatcap.width, 1);
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                // Add black background inversely proportional to alpha
+                Color p = pixels[i];
+                var pa = p.a;
+                p *= pa;
+                p.a = pa;
+                pixels[i] = p;
+            }
+            opaqueMatcap.SetPixels(0, y, originalMatcap.width, 1, pixels);
         }
-        opaqueMatcap.SetPixels32(pixels);
         opaqueMatcap.Apply();
         return opaqueMatcap;
     }
@@ -390,13 +390,16 @@ public class PoiyomiXiexeConverter
             case PoiyomiLightingMode.ShadeMap:
                 Xiexe.ShadowRamp = Context.GetITexture2D(ShadeMapShadowRamp());
                 break;
+            case PoiyomiLightingMode.Skin:
+                Xiexe.ShadowRamp = Context.GetITexture2D(TintColoredShadowRamp(SkinShadowRamp(), true));
+                break;
             default:
                 Xiexe.ShadowRamp = null;
                 break;
         }
     }
 
-    private UnityEngine.Texture TintColoredShadowRamp(UnityEngine.Texture ramp)
+    private Texture TintColoredShadowRamp(Texture ramp, bool tintWhite = false)
     {
         if (ramp == null)
         {
@@ -422,21 +425,27 @@ public class PoiyomiXiexeConverter
             {
                 UnityEngine.Texture2D.Destroy(colorizedRamp);
             }
-            colorizedRamp = new(originalRamp.width, originalRamp.height, TextureFormat.RGBA32, false)
+            colorizedRamp = new(originalRamp.width, originalRamp.height, TextureFormat.RGBA32, false, false, true)
             {
                 name = "PoiyomiConverter colorized shadow ramp"
             };
             AssetCache.ShadowRampTexture = colorizedRamp;
         }
 
-        var pixels = originalRamp.GetPixels32();
-        for (int i = 0; i < pixels.Length; i++)
+
+        Color[] pixels;
+        for (int y = 0; y < originalRamp.height; y++)
         {
-            Color p = pixels[i];
-            p = Color.Lerp(p * color, p, p.grayscale);
-            pixels[i] = Color.Lerp(Color.white, p, strength);
+            pixels = originalRamp.GetPixels(0, y, originalRamp.width, 1);
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                Color p = pixels[i];
+                float tintFactor = tintWhite ? 0 : p.grayscale;
+                p = Color.Lerp(p * color, p, tintFactor);
+                pixels[i] = Color.Lerp(Color.white, p, strength);
+            }
+            colorizedRamp.SetPixels(0, y, originalRamp.width, 1, pixels);
         }
-        colorizedRamp.SetPixels32(pixels);
         colorizedRamp.Apply();
         return colorizedRamp;
     }
@@ -450,7 +459,7 @@ public class PoiyomiXiexeConverter
             {
                 UnityEngine.Texture2D.Destroy(ramp);
             }
-            ramp = new(512, 4, TextureFormat.RGBA32, false)
+            ramp = new(512, 4, TextureFormat.RGBA32, false, false, true)
             {
                 name = "PoiyomiConverter multilayer math ramp"
             };
@@ -545,7 +554,7 @@ public class PoiyomiXiexeConverter
             {
                 UnityEngine.Texture2D.Destroy(ramp);
             }
-            ramp = new(512, 4, TextureFormat.RGBA32, false)
+            ramp = new(512, 4, TextureFormat.RGBA32, false, false, true)
             {
                 name = "PoiyomiConverter shade map math ramp"
             };
@@ -589,6 +598,15 @@ public class PoiyomiXiexeConverter
         ramp.SetPixels32(pixels);
         ramp.Apply();
         return ramp;
+    }
+
+    // ResoniteSDK/MaterialConverters/Custom/Poiyomi/ShadowRamps/T_ToonSkin_SR.png
+    private const string TOON_SKIN_SR_GUID = "8262fdf60a50a1f73acf19f9ce371e89";
+
+    private UnityEngine.Texture SkinShadowRamp()
+    {
+        string toonSkinSrPath = AssetDatabase.GUIDToAssetPath(TOON_SKIN_SR_GUID);
+        return AssetDatabase.LoadAssetAtPath(toonSkinSrPath, typeof(Texture)) as Texture;
     }
 
     private void UpdateShadowRim()
