@@ -57,7 +57,7 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
 
         _readable = Source.isReadable;
 
-        return ConvertTexture2D(Source);
+        return ConvertTexture2D(Source, PostProcessor != null);
     }
 
     protected override async Task<AssetData> SendConversion(Message message, LinkInterface link)
@@ -100,18 +100,22 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
         return Provider.CollectData(context);
     }
 
-    public static ResoniteLink.Message ConvertTexture2D(UnityEngine.Texture2D texture)
+    public static ResoniteLink.Message ConvertTexture2D(UnityEngine.Texture2D texture, bool requiresPostProcessing)
     {
-        // First try to import it as a file. This is easiest and will preserve most data
-        // Rather than just extracting the raw pixels
-        var assetPath = AssetDatabase.GetAssetPath(texture);
-
-        if (!string.IsNullOrWhiteSpace(assetPath))
+        // We can only import the file directly if there's no postprocessing required
+        if (!requiresPostProcessing)
         {
-            assetPath = Path.GetFullPath(assetPath);
+            // First try to import it as a file. This is easiest and will preserve most data
+            // Rather than just extracting the raw pixels
+            var assetPath = AssetDatabase.GetAssetPath(texture);
 
-            if (File.Exists(assetPath) && AssetConversionHelper.IsTextureFileSupportedByResonite(assetPath))
-                return new ImportTexture2DFile() { FilePath = assetPath };
+            if (!string.IsNullOrWhiteSpace(assetPath))
+            {
+                assetPath = Path.GetFullPath(assetPath);
+
+                if (File.Exists(assetPath) && AssetConversionHelper.IsTextureFileSupportedByResonite(assetPath))
+                    return new ImportTexture2DFile() { FilePath = assetPath };
+            }
         }
 
         if (!texture.isReadable)

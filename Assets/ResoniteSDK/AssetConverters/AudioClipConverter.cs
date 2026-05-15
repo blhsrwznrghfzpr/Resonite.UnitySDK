@@ -11,7 +11,7 @@ public class AudioClipConverter : AssetConverter<StaticAudioClipWrapper, StaticA
     public override string AssetClass => "AudioClip";
     public override string AssetName => Source.name;
 
-    protected override Message GenerateConversion() => ConvertAudioClip(Source);
+    protected override Message GenerateConversion() => ConvertAudioClip(Source, PostProcessor != null);
 
     protected override async Task<AssetData> SendConversion(Message message, LinkInterface link)
     {
@@ -35,18 +35,21 @@ public class AudioClipConverter : AssetConverter<StaticAudioClipWrapper, StaticA
         return Provider.CollectData(context);
     }
 
-    public static ResoniteLink.Message ConvertAudioClip(UnityEngine.AudioClip audioClip)
+    public static ResoniteLink.Message ConvertAudioClip(UnityEngine.AudioClip audioClip, bool requiresPostProcessing)
     {
-        // First try to import it as a file. This is easiest and will preserve most data
-        // Rather than just extracting the raw pixels
-        var assetPath = AssetDatabase.GetAssetPath(audioClip);
-
-        if (!string.IsNullOrWhiteSpace(assetPath))
+        if (!requiresPostProcessing)
         {
-            assetPath = Path.GetFullPath(assetPath);
+            // First try to import it as a file. This is easiest and will preserve most data
+            // Rather than just extracting the raw pixels
+            var assetPath = AssetDatabase.GetAssetPath(audioClip);
 
-            if (File.Exists(assetPath) && AssetConversionHelper.IsAudioFileSupportedByResonite(assetPath))
-                return new ImportAudioClipFile() { FilePath = assetPath };
+            if (!string.IsNullOrWhiteSpace(assetPath))
+            {
+                assetPath = Path.GetFullPath(assetPath);
+
+                if (File.Exists(assetPath) && AssetConversionHelper.IsAudioFileSupportedByResonite(assetPath))
+                    return new ImportAudioClipFile() { FilePath = assetPath };
+            }
         }
 
         // Fallback - read the raw audio data
