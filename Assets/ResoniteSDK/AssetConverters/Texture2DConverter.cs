@@ -120,8 +120,7 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
 
         if (!texture.isReadable)
         {
-            var readableTexture = new UnityEngine.Texture2D(texture.width, texture.height,
-                texture.format.IsHDR() ? TextureFormat.RGBAHalf : TextureFormat.RGBA32, false);
+            var readableTexture = new UnityEngine.Texture2D(texture.width, texture.height, texture.format, false);
 
             Graphics.CopyTexture(texture, 0, 0, readableTexture, 0, 0);
 
