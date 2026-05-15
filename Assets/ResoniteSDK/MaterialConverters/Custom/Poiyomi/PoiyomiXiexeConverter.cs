@@ -1,4 +1,6 @@
+using System;
 using FrooxEngine;
+using ResoniteLink;
 using UnityEditor;
 using UnityEngine;
 
@@ -108,7 +110,9 @@ public class PoiyomiXiexeConverter
     {
         if (Material.GetFloat("_MochieBRDF") > 0)
         {
-            Xiexe.MetallicGlossMap = Context.GetITexture2D(ReflectionSwizzle());
+            Xiexe.MetallicGlossMap = Context.GetITexture2D(
+                Material.GetTexture("_MochieMetallicMaps"),
+                ReflectionSwizzle());
             Xiexe.MetallicGlossMapOffset = Material.GetTextureOffset("_MochieMetallicMaps");
             Xiexe.MetallicGlossMapScale = Material.GetTextureScale("_MochieMetallicMaps");
             Xiexe.MetallicUV = (int)Material.GetFloat("_MochieMetallicMapsUV");
@@ -177,7 +181,7 @@ public class PoiyomiXiexeConverter
         }
     }
 
-    private Texture ReflectionSwizzle()
+    private AssetMessagePostProcessor ReflectionSwizzle()
     {
         PoiyomiColorChannel metallic = (PoiyomiColorChannel)Material.GetFloat("_MochieMetallicMapsMetallicChannel");
         PoiyomiColorChannel smoothness = (PoiyomiColorChannel)Material.GetFloat("_MochieMetallicMapsRoughnessChannel");
@@ -188,7 +192,6 @@ public class PoiyomiXiexeConverter
         bool invertReflection = Material.GetFloat("_MochieReflectionMaskInvert") > 0;
         bool invertSpecular = Material.GetFloat("_MochieSpecularMaskInvert") > 0;
 
-        Texture originalMetallicRaw = Material.GetTexture("_MochieMetallicMaps");
         if (
             metallic == PoiyomiColorChannel.R && !invertMetallic &&
             smoothness == PoiyomiColorChannel.G && !invertSmoothness &&
@@ -197,62 +200,15 @@ public class PoiyomiXiexeConverter
         )
         {
             // Standard mapping, no swizzle necessary
-            return originalMetallicRaw;
+            return null;
         }
 
-        if (originalMetallicRaw is not UnityEngine.Texture2D originalMetallic)
-        {
-            Debug.LogWarning($"Packed metallic map {originalMetallicRaw.name} is not 2D; could not perform channel swizzling. You will need to unpack and repack the channels manually in Resonite.");
-            return originalMetallicRaw;
-        }
-
-        TextureImporter importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalMetallic)) as TextureImporter;
-        if (importer == null)
-        {
-            Debug.LogWarning($"Packed metallic map {originalMetallic.name} is not readable; could not perform channel swizzling. You will need to unpack and repack the channels manually in Resonite.");
-            return originalMetallic;
-        }
-
-        Debug.Log($"Packed metallic map {originalMetallic.name} uses non-standard channel packing. Temporarily re-importing it with swizzled channels to match the format expected by Resonite.");
-
-        // Save original texture importer settings to use as a backup for later
-        TextureImporterSettings originalSettings = new();
-        importer.ReadTextureSettings(originalSettings);
-        // Create a copy of the importer settings, applying the swizzle specified by the Poiyomi material settings
-        TextureImporterSettings copySettings = new();
-        originalSettings.CopyTo(copySettings);
-        copySettings.swizzleR = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, metallic, invertMetallic);
-        copySettings.swizzleG = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, smoothness, invertSmoothness);
-        copySettings.swizzleB = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, reflection, invertReflection);
-        copySettings.swizzleA = PoiyomiColorChannelMethods.SwizzleFromChannel(originalSettings, specular, invertSpecular);
-        copySettings.readable = true;
-        // Reimport the texture with the applied swizzle
-        importer.SetTextureSettings(copySettings);
-        importer.SaveAndReimport();
-
-        // Setup a metallic texture in the asset cache to store the result of the swizzle
-        var metallicTexture = AssetCache.MetallicTexture;
-        if (metallicTexture == null || metallicTexture.width != originalMetallic.width || metallicTexture.height != originalMetallic.height)
-        {
-            if (metallicTexture != null)
-            {
-                UnityEngine.Texture2D.Destroy(metallicTexture);
-            }
-            metallicTexture = new(originalMetallic.width, originalMetallic.height, originalMetallic.format, false, true, true)
-            {
-                name = "PoiyomiConverter swizzled metallic texture"
-            };
-            AssetCache.MetallicTexture = metallicTexture;
-        }
-
-        // Make a pixel-wise copy of the swizzled texture
-        Graphics.CopyTexture(originalMetallic, 0, 0, metallicTexture, 0, 0);
-
-        // Restore the original backed-up settings of the importer, to restore it to its original state in Unity
-        importer.SetTextureSettings(originalSettings);
-        importer.SaveAndReimport();
-
-        return metallicTexture;
+        AssetCache.MetallicSwizzler.Update(
+            PoiyomiColorChannelMethods.SwizzleFromChannel(metallic, invertMetallic),
+            PoiyomiColorChannelMethods.SwizzleFromChannel(smoothness, invertSmoothness),
+            PoiyomiColorChannelMethods.SwizzleFromChannel(reflection, invertReflection),
+            PoiyomiColorChannelMethods.SwizzleFromChannel(specular, invertSpecular));
+        return AssetCache.MetallicSwizzler;
     }
 
     private void UpdateEmission()
@@ -350,7 +306,9 @@ public class PoiyomiXiexeConverter
     {
         if (Material.GetFloat("_MatcapEnable") > 0)
         {
-            Xiexe.Matcap = Context.GetITexture2D(OpacifyMatcap(Material.GetTexture("_Matcap")));
+            Xiexe.Matcap = Context.GetITexture2D(
+                Material.GetTexture("_Matcap"),
+                OpacifyProcessor);
             var matcapColor = Material.GetColor("_MatcapColor");
             var alpha = matcapColor.a;
             matcapColor *= Material.GetFloat("_MatcapIntensity") * alpha;
@@ -366,80 +324,18 @@ public class PoiyomiXiexeConverter
         }
     }
 
-    private UnityEngine.Texture OpacifyMatcap(UnityEngine.Texture matcap)
+    private static readonly AssetMessagePostProcessor OpacifyProcessor = TexturePostProcessing.ProcessPixels(Opacify);
+
+    private static color Opacify(color c)
     {
-        if (matcap == null)
+        // Turn transparent pixels black in proportion to their transparency
+        return new color()
         {
-            return matcap;
-        }
-
-        if (matcap is not UnityEngine.Texture2D originalMatcap)
-        {
-            Debug.LogWarning($"Matcap texture {matcap.name} is not 2D; could not convert it to Opaque for Resonite's shader.");
-            return matcap;
-        }
-
-        TextureImporter importer = null;
-        TextureImporterSettings importerSettings = null;
-        if (!originalMatcap.isReadable)
-        {
-            Debug.Log($"Matcap texture {originalMatcap.name} is not readable; re-importing it temporarily as readable.");
-            importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalMatcap)) as TextureImporter;
-            if (importer == null)
-            {
-                Debug.LogWarning($"Matcap texture {originalMatcap.name} could not be made readable; could not convert it to Opaque for Resonite's shader.");
-                return originalMatcap;
-            }
-
-            // Reimport asset with readable set to true to be able to call GetPixels
-            importerSettings = new();
-            importer.ReadTextureSettings(importerSettings);
-            TextureImporterSettings readableSettings = new();
-            importerSettings.CopyTo(readableSettings);
-            readableSettings.readable = true;
-            importer.SetTextureSettings(readableSettings);
-            importer.SaveAndReimport();
-        }
-
-        var opaqueMatcap = AssetCache.MatcapTexture;
-        if (opaqueMatcap == null || opaqueMatcap.width != originalMatcap.width || opaqueMatcap.height != originalMatcap.height)
-        {
-            if (opaqueMatcap != null)
-            {
-                UnityEngine.Texture2D.Destroy(opaqueMatcap);
-            }
-            opaqueMatcap = new(originalMatcap.width, originalMatcap.height, TextureFormat.RGBA32, false, false, true)
-            {
-                name = "PoiyomiConverter opaque matcap texture"
-            };
-            AssetCache.MatcapTexture = opaqueMatcap;
-        }
-
-        Color[] pixels;
-        for (int y = 0; y < originalMatcap.height; y++)
-        {
-            pixels = originalMatcap.GetPixels(0, y, originalMatcap.width, 1);
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                // Add black background inversely proportional to alpha
-                Color p = pixels[i];
-                var pa = p.a;
-                p *= pa;
-                p.a = pa;
-                pixels[i] = p;
-            }
-            opaqueMatcap.SetPixels(0, y, originalMatcap.width, 1, pixels);
-        }
-        opaqueMatcap.Apply();
-
-        if (importer != null)
-        {
-            // Restore asset to non-readable state
-            importer.SetTextureSettings(importerSettings);
-            importer.SaveAndReimport();
-        }
-
-        return opaqueMatcap;
+            r = c.r * c.a,
+            g = c.g * c.a,
+            b = c.b * c.a,
+            a = c.a,
+        };
     }
 
     private void UpdateOcclusion()
@@ -490,7 +386,9 @@ public class PoiyomiXiexeConverter
         switch ((PoiyomiLightingMode)Material.GetFloat("_LightingMode"))
         {
             case PoiyomiLightingMode.TextureRamp:
-                Xiexe.ShadowRamp = Context.GetITexture2D(TintColoredShadowRamp(Material.GetTexture("_ToonRamp")));
+                Xiexe.ShadowRamp = Context.GetITexture2D(
+                    Material.GetTexture("_ToonRamp"),
+                    TintColoredShadowRamp(false));
                 break;
             case PoiyomiLightingMode.MultilayerMath:
                 Xiexe.ShadowRamp = Context.GetITexture2D(MultilayerMathShadowRamp());
@@ -499,7 +397,9 @@ public class PoiyomiXiexeConverter
                 Xiexe.ShadowRamp = Context.GetITexture2D(ShadeMapShadowRamp());
                 break;
             case PoiyomiLightingMode.Skin:
-                Xiexe.ShadowRamp = Context.GetITexture2D(TintColoredShadowRamp(SkinShadowRamp(), true));
+                Xiexe.ShadowRamp = Context.GetITexture2D(
+                    SkinShadowRamp(),
+                    TintColoredShadowRamp(true));
                 break;
             default:
                 Xiexe.ShadowRamp = null;
@@ -507,85 +407,19 @@ public class PoiyomiXiexeConverter
         }
     }
 
-    private Texture TintColoredShadowRamp(Texture ramp, bool tintWhite = false)
+    private AssetMessagePostProcessor TintColoredShadowRamp(bool tintWhite = false)
     {
-        if (ramp == null)
-        {
-            return ramp;
-        }
-
-        var color = Material.GetColor("_LightingShadowColor");
+        var tint = Material.GetColor("_LightingShadowColor");
         var strength = Material.GetFloat("_ShadowStrength");
-        if (color == Color.white && strength >= 1)
+        if (tint == Color.white && strength >= 1)
         {
-            return ramp;
-        }
-        if (ramp is not UnityEngine.Texture2D originalRamp)
-        {
-            Debug.LogWarning($"Shadow ramp texture {ramp.name} is not 2D; could not bake shadow tint and strength for Resonite's shader.");
-            return ramp;
+            return null;
         }
 
-        TextureImporter importer = null;
-        TextureImporterSettings importerSettings = null;
-        if (!originalRamp.isReadable)
-        {
-            Debug.Log($"Shadow ramp texture {originalRamp.name} is not readable; re-importing it temporarily as readable.");
-            importer = AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(originalRamp)) as TextureImporter;
-            if (importer == null)
-            {
-                Debug.LogWarning($"Shadow ramp texture {originalRamp.name} could not be made readable; could not bake shadow tint and strength for Resonite's shader.");
-                return originalRamp;
-            }
-
-            // Reimport asset with readable set to true to be able to call GetPixels
-            importerSettings = new();
-            importer.ReadTextureSettings(importerSettings);
-            TextureImporterSettings readableSettings = new();
-            importerSettings.CopyTo(readableSettings);
-            readableSettings.readable = true;
-            importer.SetTextureSettings(readableSettings);
-            importer.SaveAndReimport();
-        }
-
-        var colorizedRamp = AssetCache.ShadowRampTexture;
-        if (colorizedRamp == null || colorizedRamp.width != originalRamp.width || colorizedRamp.height != originalRamp.height)
-        {
-            if (colorizedRamp != null)
-            {
-                UnityEngine.Texture2D.Destroy(colorizedRamp);
-            }
-            colorizedRamp = new(originalRamp.width, originalRamp.height, TextureFormat.RGBA32, false, false, true)
-            {
-                name = "PoiyomiConverter colorized shadow ramp"
-            };
-            AssetCache.ShadowRampTexture = colorizedRamp;
-        }
-
-
-        Color[] pixels;
-        for (int y = 0; y < originalRamp.height; y++)
-        {
-            pixels = originalRamp.GetPixels(0, y, originalRamp.width, 1);
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                Color p = pixels[i];
-                float tintFactor = tintWhite ? 0 : p.grayscale;
-                p = Color.Lerp(p * color, p, tintFactor);
-                pixels[i] = Color.Lerp(Color.white, p, strength);
-            }
-            colorizedRamp.SetPixels(0, y, originalRamp.width, 1, pixels);
-        }
-        colorizedRamp.Apply();
-
-        if (importer != null)
-        {
-            // Restore asset to non-readable state
-            importer.SetTextureSettings(importerSettings);
-            importer.SaveAndReimport();
-        }
-
-        return colorizedRamp;
+        AssetCache.ShadowRampTinter.Tint = tint;
+        AssetCache.ShadowRampTinter.Strength = strength;
+        AssetCache.ShadowRampTinter.TintWhite = tintWhite;
+        return AssetCache.ShadowRampTinter;
     }
 
     private UnityEngine.Texture MultilayerMathShadowRamp()

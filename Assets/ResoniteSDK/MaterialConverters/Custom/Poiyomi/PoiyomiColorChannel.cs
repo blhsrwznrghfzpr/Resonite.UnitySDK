@@ -11,22 +11,22 @@ public enum PoiyomiColorChannel
 
 public static class PoiyomiColorChannelMethods
 {
-    public static TextureImporterSwizzle SwizzleFromChannel(TextureImporterSettings settings, PoiyomiColorChannel channel, bool invert)
+    public static TextureImporterSwizzle SwizzleFromChannel(PoiyomiColorChannel channel, bool invert)
     {
         TextureImporterSwizzle result;
         switch (channel)
         {
             case PoiyomiColorChannel.R:
-                result = settings.swizzleR;
+                result = TextureImporterSwizzle.R;
                 break;
             case PoiyomiColorChannel.G:
-                result = settings.swizzleG;
+                result = TextureImporterSwizzle.G;
                 break;
             case PoiyomiColorChannel.B:
-                result = settings.swizzleB;
+                result = TextureImporterSwizzle.B;
                 break;
             case PoiyomiColorChannel.A:
-                result = settings.swizzleA;
+                result = TextureImporterSwizzle.A;
                 break;
             case PoiyomiColorChannel.White:
             default:

@@ -32,7 +32,7 @@ Material:
   m_CustomRenderQueue: 2000
   stringTagMap:
     OriginalKeywords: AUTO_EXPOSURE BSSBLOOMFOGTYPE_HEIGHT MOCHIE_PBR POI_SUBSURFACESCATTERING
-      PROP_LIGHTINGAOMAPS VIGNETTE_MASKED _EMISSION _GLOSSYREFLECTIONS_OFF _LIGHTINGMODE_TEXTURERAMP
+      PROP_LIGHTINGAOMAPS VIGNETTE_MASKED _EMISSION _GLOSSYREFLECTIONS_OFF _LIGHTINGMODE_SKIN
       _RIM2STYLE_POIYOMI _RIMSTYLE_POIYOMI _STOCHASTICMODE_DELIOT_HEITZ _STYLIZEDREFLECTIONMODE_LILTOON
     OriginalShader: .poiyomi/Poiyomi Toon
     OriginalShaderGUID: 9444ce77bf4418748b1e8591b9d97f85
@@ -2180,8 +2180,8 @@ Material:
     - _MochieMetallicGlobalMaskBlendType: 2
     - _MochieMetallicMapInvert: 0
     - _MochieMetallicMapsMetallicChannel: 0
-    - _MochieMetallicMapsReflectionMaskChannel: 2
-    - _MochieMetallicMapsRoughnessChannel: 1
+    - _MochieMetallicMapsReflectionMaskChannel: 3
+    - _MochieMetallicMapsRoughnessChannel: 3
     - _MochieMetallicMapsSpecularMaskChannel: 3
     - _MochieMetallicMapsStochastic: 0
     - _MochieMetallicMapsUV: 0
@@ -3980,7 +3980,7 @@ Material:
     - _LightingAOMapsPan: {r: 0, g: 0, b: 0, a: 0}
     - _LightingDetailShadowMapsPan: {r: 0, g: 0, b: 0, a: 0}
     - _LightingForcedColor: {r: 1, g: 1, b: 1, a: 1}
-    - _LightingShadowColor: {r: 1, g: 1, b: 1, a: 1}
+    - _LightingShadowColor: {r: 0, g: 0.54901963, b: 0.034520674, a: 1}
     - _LightingShadowMasksPan: {r: 0, g: 0, b: 0, a: 0}
     - _LightingWrappedColor: {r: 1, g: 1, b: 1, a: 1}
     - _LightngForcedDirection: {r: 0, g: 0, b: 0, a: 1}
@@ -4142,7 +4142,7 @@ Material:
     - _RimColorTexPan: {r: 0, g: 0, b: 0, a: 0}
     - _RimEnviroMaskPan: {r: 0, g: 0, b: 0, a: 0}
     - _RimIndirColor: {r: 0, g: 0, b: 0, a: 1}
-    - _RimLightColor: {r: 0.0039215684, g: 0.67847663, b: 1, a: 1}
+    - _RimLightColor: {r: 0.045315955, g: 0.3773585, b: 0.030259885, a: 1}
     - _RimMaskPan: {r: 0, g: 0, b: 0, a: 0}
     - _RimShadowAlpha: {r: 0, g: 0, b: 0, a: 1}
     - _RimTexPan: {r: 0, g: 0, b: 0, a: 0}
