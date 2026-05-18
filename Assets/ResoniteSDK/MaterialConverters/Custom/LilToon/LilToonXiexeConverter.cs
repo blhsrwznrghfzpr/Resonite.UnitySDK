@@ -57,9 +57,9 @@ public class LilToonXiexeConverter
         Xiexe.OcclusionMapOffset = GetTextureOffset("_ShadowBorderMask");
         Xiexe.OutlineMask = Context.GetITexture2D(GetTexture("_OutlineWidthMask"));
         Xiexe.ShadowRamp = Context.GetITexture2D(GetTexture("_Ramp") ?? BakeShadowRampWithLilToon());
-        Xiexe.ShadowRampMask = Context.GetITexture2D(GetTexture("_ShadowBorderMask"));
-        Xiexe.ShadowRampMaskOffset = GetTextureOffset("_ShadowBorderMask");
-        Xiexe.ShadowRampMaskScale = GetTextureScale("_ShadowBorderMask");
+        Xiexe.ShadowRampMask = Context.GetITexture2D(GetTexture("_ShadowStrengthMask"));
+        Xiexe.ShadowRampMaskOffset = GetTextureOffset("_ShadowStrengthMask");
+        Xiexe.ShadowRampMaskScale = GetTextureScale("_ShadowStrengthMask");
         Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
         Xiexe.ShadowSharpness = 0.5f;
         Xiexe.ShadowRimRange = 0.7f;
