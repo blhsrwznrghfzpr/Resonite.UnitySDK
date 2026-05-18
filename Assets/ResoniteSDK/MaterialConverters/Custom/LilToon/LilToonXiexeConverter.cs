@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Reflection;
 using FrooxEngine;
 using UnityEditor;
@@ -13,8 +12,6 @@ using UnityTexture2D = UnityEngine.Texture2D;
 
 public class LilToonXiexeConverter
 {
-    private const string BakeAssetFolder = "Assets/ResoniteSDK/Generated/LilToon";
-
     private readonly XiexeToonMaterial Xiexe;
     private readonly UnityMaterial Material;
     private readonly IConversionContext Context;
@@ -153,7 +150,7 @@ public class LilToonXiexeConverter
             return null;
         }
 
-        return CacheBakedTexture(bakedTexture, "main", sourceTexture2D, false, ref AssetCache.MainTexture);
+        return CacheBakedTexture(bakedTexture, sourceTexture2D, ref AssetCache.MainTexture);
     }
 
     private UnityTexture BakeShadowRampWithLilToon()
@@ -187,7 +184,7 @@ public class LilToonXiexeConverter
 
         bakedRamp.name = "LilToonConverter baked shadow ramp";
         bakedRamp.wrapMode = TextureWrapMode.Clamp;
-        return CacheBakedTexture(bakedRamp, "shadow-ramp", null, true, ref AssetCache.ShadowRampTexture);
+        return CacheBakedTexture(bakedRamp, null, ref AssetCache.ShadowRampTexture);
     }
 
     private static MethodInfo GetLilToonRampConvertMethod()
@@ -221,70 +218,22 @@ public class LilToonXiexeConverter
         return bakedTexture;
     }
 
-    private UnityTexture2D CacheBakedTexture(UnityTexture2D bakedTexture, string suffix, UnityTexture2D referenceTexture, bool isDataTexture, ref UnityTexture2D cachedTexture)
+    private UnityTexture2D CacheBakedTexture(UnityTexture2D bakedTexture, UnityTexture2D referenceTexture, ref UnityTexture2D cachedTexture)
     {
-        var wrapMode = referenceTexture != null ? referenceTexture.wrapMode : bakedTexture.wrapMode;
-        var filterMode = referenceTexture != null ? referenceTexture.filterMode : bakedTexture.filterMode;
-        var anisoLevel = referenceTexture != null ? referenceTexture.anisoLevel : bakedTexture.anisoLevel;
-        var mipmapEnabled = referenceTexture != null && referenceTexture.mipmapCount > 1;
-
-        try
+        if (referenceTexture != null)
         {
-            Directory.CreateDirectory(BakeAssetFolder);
-
-            var assetPath = GetBakeAssetPath(suffix);
-            File.WriteAllBytes(assetPath, bakedTexture.EncodeToPNG());
-
-            AssetDatabase.ImportAsset(assetPath);
-
-            var importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
-            if (importer != null)
-            {
-                importer.wrapMode = wrapMode;
-                importer.filterMode = filterMode;
-                importer.anisoLevel = anisoLevel;
-                importer.mipmapEnabled = mipmapEnabled;
-                importer.sRGBTexture = !isDataTexture;
-                importer.SaveAndReimport();
-            }
-
-            cachedTexture = AssetDatabase.LoadAssetAtPath<UnityTexture2D>(assetPath);
-            if (cachedTexture == null)
-            {
-                UnityEngine.Debug.LogWarning($"Could not load cached lilToon baked texture at {assetPath}.");
-                cachedTexture = bakedTexture;
-                return bakedTexture;
-            }
-
-            UnityObject.DestroyImmediate(bakedTexture);
-            return cachedTexture;
-        }
-        catch (Exception exception)
-        {
-            UnityEngine.Debug.LogWarning($"Could not cache lilToon baked texture as an asset. Falling back to in-memory texture. {exception.Message}");
-            cachedTexture = bakedTexture;
-            return bakedTexture;
-        }
-    }
-
-    private string GetBakeAssetPath(string suffix)
-    {
-        var materialAssetPath = AssetDatabase.GetAssetPath(Material);
-        var materialKey = string.IsNullOrEmpty(materialAssetPath)
-            ? Material.GetInstanceID().ToString()
-            : AssetDatabase.AssetPathToGUID(materialAssetPath);
-
-        return $"{BakeAssetFolder}/{SanitizeFileName(Material.name)}_{materialKey}_{suffix}.png";
-    }
-
-    private static string SanitizeFileName(string fileName)
-    {
-        foreach (var invalidChar in Path.GetInvalidFileNameChars())
-        {
-            fileName = fileName.Replace(invalidChar, '_');
+            bakedTexture.wrapMode = referenceTexture.wrapMode;
+            bakedTexture.filterMode = referenceTexture.filterMode;
+            bakedTexture.anisoLevel = referenceTexture.anisoLevel;
         }
 
-        return string.IsNullOrWhiteSpace(fileName) ? "lilToon" : fileName;
+        if (cachedTexture != null && cachedTexture != bakedTexture && !EditorUtility.IsPersistent(cachedTexture))
+        {
+            UnityObject.DestroyImmediate(cachedTexture);
+        }
+
+        cachedTexture = bakedTexture;
+        return bakedTexture;
     }
 
     private static MethodInfo GetLilToonRunBakeMethod()
