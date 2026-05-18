@@ -6,6 +6,9 @@ using UnityEngine;
 using UnityColor = UnityEngine.Color;
 using UnityMaterial = UnityEngine.Material;
 using UnityObject = UnityEngine.Object;
+using UnityRenderTexture = UnityEngine.RenderTexture;
+using UnityRenderTextureFormat = UnityEngine.RenderTextureFormat;
+using UnityRenderTextureReadWrite = UnityEngine.RenderTextureReadWrite;
 using UnityShader = UnityEngine.Shader;
 using UnityTexture = UnityEngine.Texture;
 using UnityTexture2D = UnityEngine.Texture2D;
@@ -160,37 +163,86 @@ public class LilToonXiexeConverter
             return null;
         }
 
-        var convert = GetLilToonRampConvertMethod();
-        if (convert == null)
+        var bakerShader = UnityShader.Find("Hidden/ltsother_bakeramp");
+        if (bakerShader == null)
         {
+            UnityEngine.Debug.LogWarning("Could not find lilToon shadow ramp baker shader Hidden/ltsother_bakeramp.");
             return null;
         }
 
-        UnityTexture2D bakedRamp;
+        UnityMaterial bakerMaterial = null;
+        UnityTexture2D bakedRamp = null;
+        UnityRenderTexture renderTexture = null;
+        var currentRenderTexture = UnityRenderTexture.active;
+
         try
         {
-            bakedRamp = convert.Invoke(null, new object[] { Material, 128 }) as UnityTexture2D;
+            const int width = 256;
+            const int height = 256;
+            bakerMaterial = new UnityMaterial(Material)
+            {
+                shader = bakerShader,
+            };
+
+            renderTexture = UnityRenderTexture.GetTemporary(width, height, 0, UnityRenderTextureFormat.Default, UnityRenderTextureReadWrite.Default);
+            UnityRenderTexture.active = renderTexture;
+            Graphics.Blit(null, renderTexture, bakerMaterial);
+
+            bakedRamp = new UnityTexture2D(width, height, TextureFormat.RGBA32, false, false)
+            {
+                name = "LilToonConverter baked shadow ramp",
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            bakedRamp.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            bakedRamp.Apply();
+            ApplyShadowRampMaskGradient(bakedRamp);
         }
         catch (Exception exception)
         {
-            UnityEngine.Debug.LogWarning($"Could not bake lilToon shadow ramp through lilToon2Ramp.Convert. {exception.Message}");
+            if (bakedRamp != null)
+            {
+                UnityObject.DestroyImmediate(bakedRamp);
+            }
+
+            UnityEngine.Debug.LogWarning($"Could not bake lilToon shadow ramp. {exception.Message}");
             return null;
         }
-
-        if (bakedRamp == null)
+        finally
         {
-            return null;
+            UnityRenderTexture.active = currentRenderTexture;
+            if (renderTexture != null)
+            {
+                UnityRenderTexture.ReleaseTemporary(renderTexture);
+            }
+
+            if (bakerMaterial != null)
+            {
+                UnityObject.DestroyImmediate(bakerMaterial);
+            }
         }
 
-        bakedRamp.name = "LilToonConverter baked shadow ramp";
         bakedRamp.wrapMode = TextureWrapMode.Clamp;
         return CacheBakedTexture(bakedRamp, null, ref AssetCache.ShadowRampTexture);
     }
 
-    private static MethodInfo GetLilToonRampConvertMethod()
+    private static void ApplyShadowRampMaskGradient(UnityTexture2D ramp)
     {
-        var rampBakerType = GetLilToonEditorType("lilToon.lilToon2Ramp");
-        return rampBakerType?.GetMethod("Convert", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(UnityMaterial), typeof(int) }, null);
+        var sourcePixels = ramp.GetPixels();
+        var gradientPixels = new UnityColor[sourcePixels.Length];
+        var width = ramp.width;
+        var height = ramp.height;
+
+        for (var y = 0; y < height; y++)
+        {
+            var mask = height > 1 ? y / (height - 1f) : 1f;
+            for (var x = 0; x < width; x++)
+            {
+                gradientPixels[x + y * width] = UnityColor.Lerp(UnityColor.white, sourcePixels[x], mask);
+            }
+        }
+
+        ramp.SetPixels(gradientPixels);
+        ramp.Apply();
     }
 
     private static UnityTexture2D BakeTextureWithLilToon(UnityTexture2D sourceTexture, UnityMaterial material, string name)
