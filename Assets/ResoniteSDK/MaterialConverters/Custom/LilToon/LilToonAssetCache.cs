@@ -5,5 +5,7 @@ public class LilToonAssetCache
 {
     public UnityTexture2D MainTexture;
 
+    public UnityTexture2D EmissionMap;
+
     public UnityTexture2D ShadowRampTexture;
 }
