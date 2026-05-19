@@ -52,7 +52,7 @@ public class LilToonXiexeConverter
         Xiexe.OcclusionMap = Context.GetITexture2D(GetTexture("_ShadowBorderMask"));
         Xiexe.OcclusionMapScale = GetTextureScale("_ShadowBorderMask");
         Xiexe.OcclusionMapOffset = GetTextureOffset("_ShadowBorderMask");
-        Xiexe.OutlineMask = Context.GetITexture2D(GetTexture("_OutlineWidthMask"));
+        UpdateOutline();
         Xiexe.ShadowRamp = Context.GetITexture2D(GetTexture("_Ramp") ?? BakeShadowRampWithLilToon());
         // XiexeToon's null ShadowRampMask behaves differently from lilToon's null
         // _ShadowStrengthMask, which means no shadow strength mask. Preserve that with white.
@@ -163,6 +163,35 @@ public class LilToonXiexeConverter
         Xiexe.EmissionMapScale = emissionMap != null ? GetTextureScale("_EmissionMap") : Vector2.one;
         Xiexe.EmissionMapOffset = emissionMap != null ? GetTextureOffset("_EmissionMap") : Vector2.zero;
         Xiexe.EmissionUV = (int)GetFloat("_EmissionMap_UVMode", 0);
+    }
+
+    private void UpdateOutline()
+    {
+        if (!IsOutlineEnabled())
+        {
+            Xiexe.Outline = XiexeToonMaterial.OutlineStyle.None;
+            Xiexe.OutlineMask = null;
+            return;
+        }
+
+        Xiexe.Outline = GetFloat("_OutlineEnableLighting", 1) > 0
+            ? XiexeToonMaterial.OutlineStyle.Lit
+            : XiexeToonMaterial.OutlineStyle.Emissive;
+        Xiexe.OutlineWidth = GetFloat("_OutlineWidth", 0.08f);
+        Xiexe.OutlineColor = GetColor("_OutlineColor", UnityColor.white).ToColorX_Auto();
+        Xiexe.OutlineAlbedoTint = GetFloat("_OutlineLitApplyTex", 0) > 0;
+        Xiexe.OutlineMask = Context.GetITexture2D(GetTexture("_OutlineWidthMask"));
+    }
+
+    private bool IsOutlineEnabled()
+    {
+        if (GetFloat("_UseOutline", 0) != 0)
+        {
+            return true;
+        }
+
+        var shaderName = Material.shader != null ? Material.shader.name : string.Empty;
+        return shaderName.IndexOf("Outline", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
     private void UpdateShadowRim()
