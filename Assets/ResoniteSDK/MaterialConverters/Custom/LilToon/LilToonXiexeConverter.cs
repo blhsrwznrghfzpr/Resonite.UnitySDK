@@ -46,9 +46,7 @@ public class LilToonXiexeConverter
         Xiexe.MetallicGlossMap = Context.GetITexture2D(GetTexture("_MetallicGlossMap"));
         Xiexe.MetallicGlossMapScale = GetTextureScale("_MetallicGlossMap");
         Xiexe.MetallicGlossMapOffset = GetTextureOffset("_MetallicGlossMap");
-        Xiexe.EmissionMap = Context.GetITexture2D(GetTexture("_EmissionMap"));
-        Xiexe.EmissionMapScale = GetTextureScale("_EmissionMap");
-        Xiexe.EmissionMapOffset = GetTextureOffset("_EmissionMap");
+        UpdateEmission();
         UpdateRim();
         UpdateMatcap();
         Xiexe.OcclusionMap = Context.GetITexture2D(GetTexture("_ShadowBorderMask"));
@@ -139,6 +137,32 @@ public class LilToonXiexeConverter
         matcapColor *= GetFloat("_MatCapBlend", 1) * alpha;
         matcapColor.a = alpha;
         Xiexe.MatcapTint = matcapColor.ToColorX_Auto();
+    }
+
+    private void UpdateEmission()
+    {
+        if (GetFloat("_UseEmission", 0) == 0)
+        {
+            Xiexe.EmissionMap = null;
+            Xiexe.EmissionColor = Color.black.ToColorX_sRGB();
+            return;
+        }
+
+        var emissionColor = GetColor("_EmissionColor", UnityColor.white);
+        var alpha = emissionColor.a;
+        var emissionBlend = GetFloat("_EmissionBlend", 1);
+        emissionColor *= emissionBlend;
+        emissionColor.a = alpha;
+
+        Xiexe.EmissionColor = emissionColor.ToColorX_Auto();
+
+        var emissionMap = GetTexture("_EmissionMap");
+        var hasEmissionColor = emissionColor.maxColorComponent > 0;
+        var outputEmissionMap = emissionMap ?? (hasEmissionColor ? UnityTexture2D.whiteTexture : null);
+        Xiexe.EmissionMap = Context.GetITexture2D(outputEmissionMap);
+        Xiexe.EmissionMapScale = emissionMap != null ? GetTextureScale("_EmissionMap") : Vector2.one;
+        Xiexe.EmissionMapOffset = emissionMap != null ? GetTextureOffset("_EmissionMap") : Vector2.zero;
+        Xiexe.EmissionUV = (int)GetFloat("_EmissionMap_UVMode", 0);
     }
 
     private void UpdateShadowRim()
