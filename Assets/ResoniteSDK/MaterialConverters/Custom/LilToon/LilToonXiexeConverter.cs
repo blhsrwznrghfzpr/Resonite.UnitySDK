@@ -32,7 +32,7 @@ public class LilToonXiexeConverter
     {
         var bakedMainTexture = BakeMainTextureWithLilToon();
         Xiexe.MainTexture = Context.GetITexture2D(bakedMainTexture ?? GetTexture("_MainTex"));
-        Xiexe.Color = bakedMainTexture != null ? Color.white.ToColorX_sRGB() : GetColor("_Color", UnityColor.white).ToColorX_sRGB();
+        Xiexe.Color = GetColor("_Color", UnityColor.white).ToColorX_sRGB();
         Xiexe.BlendMode = GetBlendMode();
         Xiexe.ZWrite = GetFloat("_ZWrite", 1) > 0 ? ZWrite.On : ZWrite.Off;
         Xiexe.AlphaClip = GetFloat("_Cutoff", 0.5f);
@@ -164,8 +164,7 @@ public class LilToonXiexeConverter
 
     private UnityTexture BakeMainTextureWithLilToon()
     {
-        var shouldBakeMain = HasNonDefaultColor()
-            || GetVector("_MainTexHSVG", new Vector4(0, 1, 1, 1)) != new Vector4(0, 1, 1, 1)
+        var shouldBakeMain = GetVector("_MainTexHSVG", new Vector4(0, 1, 1, 1)) != new Vector4(0, 1, 1, 1)
             || GetFloat("_MainGradationStrength", 0) != 0
             || GetFloat("_UseMain2ndTex", 0) != 0
             || GetFloat("_UseMain3rdTex", 0) != 0;
@@ -193,6 +192,11 @@ public class LilToonXiexeConverter
         {
             bakerMaterial = new UnityMaterial(bakerShader);
             bakerMaterial.CopyPropertiesFromMaterial(Material);
+            if (bakerMaterial.HasProperty("_Color"))
+            {
+                bakerMaterial.SetColor("_Color", UnityColor.white);
+            }
+
             SetFallbackTexture(bakerMaterial, "_MainTex", sourceTexture);
             SetFallbackTexture(bakerMaterial, "_MainGradationTex", UnityTexture2D.whiteTexture);
             SetFallbackTexture(bakerMaterial, "_MainColorAdjustMask", UnityTexture2D.whiteTexture);
@@ -431,11 +435,6 @@ public class LilToonXiexeConverter
         return new Vector2(
             Mathf.Clamp01((xiexeMin + xiexeMax) * 0.5f),
             Mathf.Clamp01((xiexeMax - xiexeMin) * 0.5f));
-    }
-
-    private bool HasNonDefaultColor()
-    {
-        return Material.HasProperty("_Color") && Material.GetColor("_Color") != UnityColor.white;
     }
 
     private float GetFloat(string property, float defaultValue)
