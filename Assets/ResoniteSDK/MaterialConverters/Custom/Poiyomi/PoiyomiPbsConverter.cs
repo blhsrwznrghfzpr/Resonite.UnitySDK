@@ -1,5 +1,8 @@
 using FrooxEngine;
+using ResoniteLink;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 // This converter is a prototype meant to convert materials using
 // the Poiyomi Toon family of shaders into a Resonite PBS Material.
@@ -13,16 +16,18 @@ using UnityEngine;
 
 public class PoiyomiPbsConverter
 {
-    private FrooxEngine.PBS_Metallic Pbs;
+    private PBS_Metallic Pbs;
 
     private UnityEngine.Material Material;
     private IConversionContext Context;
+    private PoiyomiAssetCache AssetCache;
 
-    public PoiyomiPbsConverter(FrooxEngine.PBS_Metallic Pbs, UnityEngine.Material Material, IConversionContext Context)
+    public PoiyomiPbsConverter(PBS_Metallic Pbs, UnityEngine.Material Material, IConversionContext Context, PoiyomiAssetCache AssetCache)
     {
         this.Pbs = Pbs;
         this.Material = Material;
         this.Context = Context;
+        this.AssetCache = AssetCache;
     }
 
     public IAssetProvider<FrooxEngine.Material> UpdateConversion()
@@ -91,7 +96,7 @@ public class PoiyomiPbsConverter
         }
 
         Pbs.HeightMap = Context.GetITexture2D(Material.GetTexture("_VertexManipulationHeightMask"));
-        Pbs.HeightScale = - Material.GetFloat("_VertexManipulationHeight");
+        Pbs.HeightScale = -Material.GetFloat("_VertexManipulationHeight");
     }
 
     private void UpdateOcclusion()
@@ -118,7 +123,9 @@ public class PoiyomiPbsConverter
     {
         if (Material.GetFloat("_MochieBRDF") > 0)
         {
-            Pbs.MetallicMap = Context.GetITexture2D(Material.GetTexture("_MochieMetallicMaps"));
+            Pbs.MetallicMap = Context.GetITexture2D(
+                Material.GetTexture("_MochieMetallicMaps"),
+                MetallicSwizzle());
             Pbs.Metallic = Material.GetFloat("_MochieMetallicMultiplier");
             Pbs.Smoothness = Material.GetFloat("_MochieRoughnessMultiplier");
             return;
@@ -130,5 +137,29 @@ public class PoiyomiPbsConverter
             Pbs.Metallic = 0;
             Pbs.Smoothness = 0;
         }
+    }
+
+    private AssetMessagePostProcessor MetallicSwizzle()
+    {
+        PoiyomiColorChannel metallic = (PoiyomiColorChannel)Material.GetFloat("_MochieMetallicMapsMetallicChannel");
+        PoiyomiColorChannel smoothness = (PoiyomiColorChannel)Material.GetFloat("_MochieMetallicMapsRoughnessChannel");
+        bool invertMetallic = Material.GetFloat("_MochieMetallicMapInvert") > 0;
+        bool invertSmoothness = Material.GetFloat("_MochieRoughnessMapInvert") > 0;
+
+        if (
+            metallic == PoiyomiColorChannel.R && !invertMetallic &&
+            smoothness == PoiyomiColorChannel.A && !invertSmoothness
+        )
+        {
+            // Standard mapping, no swizzle necessary
+            return null;
+        }
+
+        AssetCache.MetallicSwizzler.Update(
+            PoiyomiColorChannelMethods.SwizzleFromChannel(metallic, invertMetallic),
+            TextureImporterSwizzle.Zero,
+            TextureImporterSwizzle.Zero,
+            PoiyomiColorChannelMethods.SwizzleFromChannel(smoothness, invertSmoothness));
+        return AssetCache.MetallicSwizzler;
     }
 }

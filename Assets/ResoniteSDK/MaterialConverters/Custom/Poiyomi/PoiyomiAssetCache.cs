@@ -4,6 +4,6 @@ using UnityEngine;
 public class PoiyomiAssetCache
 {
     public UnityEngine.Texture2D ShadowRampTexture;
-
-    public UnityEngine.Texture2D MatcapTexture;
+    public ColorSwizzler MetallicSwizzler = new();
+    public PoiyomiXiexeTinter ShadowRampTinter = new();
 }

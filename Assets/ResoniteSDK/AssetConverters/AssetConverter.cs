@@ -17,7 +17,7 @@ public abstract class AssetConverter : MonoBehaviour
         var name = AssetName;
 
         // Run any postprocessing
-        PostProcessor?.Invoke(data);
+        PostProcessor?.Process(data);
 
         // Store the timestamp after the conversion
         // The timestamp can change during the conversion generation, so we make sure to change it after
@@ -36,7 +36,7 @@ public abstract class AssetConverter : MonoBehaviour
             // Assign the URL of the converted asset
             var updateData = UpdateProvider(result.AssetURL, context);
 
-            // Send the update! 
+            // Send the update!
             // We could just do it all at once, but having it pop piece by piece is more interactive and looks cooler :3
             var update = new UpdateComponent()
             {
@@ -55,7 +55,7 @@ public abstract class AssetConverter : MonoBehaviour
 
     protected abstract ulong GetAssetTimestamp();
 
-    public abstract string AssetClass { get; } 
+    public abstract string AssetClass { get; }
     public abstract string AssetName { get; }
     protected abstract ResoniteLink.Message GenerateConversion();
     protected abstract Task<AssetData> SendConversion(ResoniteLink.Message message, LinkInterface link);
@@ -76,7 +76,7 @@ public abstract class AssetConverter<TWrapper, TProvider, TUnity, TResonite> : A
         if (Source != null || Provider != null)
             throw new InvalidOperationException("This converter has already been initialized");
 
-        if(source == null)
+        if (source == null)
             throw new ArgumentNullException(nameof(source));
 
         this.Source = source;
@@ -96,6 +96,9 @@ public abstract class AssetConverter<TWrapper, TProvider, TUnity, TResonite> : A
         if (Provider.Data is IStaticAssetProvider staticProvider && staticProvider.URL == null)
             return true;
 
+        if (PostProcessor != null && PostProcessor.HasChanged())
+            return true;
+
         return base.HasAssetChanged();
     }
 
@@ -103,11 +106,11 @@ public abstract class AssetConverter<TWrapper, TProvider, TUnity, TResonite> : A
     {
         var assetPath = AssetDatabase.GetAssetPath(Source);
 
-        if (assetPath == "Library/unity default resources" || 
+        if (assetPath == "Library/unity default resources" ||
             assetPath == "Resources/unity_builtin_extra")
             return 0;
 
-        if(!string.IsNullOrEmpty(assetPath))
+        if (!string.IsNullOrEmpty(assetPath))
         {
             var importer = AssetImporter.GetAtPath(assetPath);
 

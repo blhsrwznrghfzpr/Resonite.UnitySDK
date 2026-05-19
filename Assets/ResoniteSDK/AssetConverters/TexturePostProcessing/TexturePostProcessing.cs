@@ -51,25 +51,31 @@ public static class TexturePostProcessing
 
     public static readonly AssetMessagePostProcessor InvertRGBA = ProcessPixels(c => new color()
     {
-        r = 1 - c.r, 
-        g = 1 - c.g, 
+        r = 1 - c.r,
+        g = 1 - c.g,
         b = 1 - c.b,
         a = 1 - c.a
     });
 
     #endregion
 
-    public static AssetMessagePostProcessor ProcessPixels(Func<color, color> colorFilter)
+    public delegate color ColorFilter(color c);
+
+    public static AssetMessageDelegatePostProcessor ProcessPixels(ColorFilter colorFilter)
     {
-        return message =>
+        if (colorFilter == null)
         {
-            switch(message)
+            return null;
+        }
+        return new(message =>
+        {
+            switch (message)
             {
                 case ImportTexture2DRawDataHDR hdr:
                     var hdrData = hdr.AccessRawData();
 
-                    for(int y = 0; y < hdrData.height; y++)
-                        for(int x = 0; x < hdrData.width; x++)
+                    for (int y = 0; y < hdrData.height; y++)
+                        for (int x = 0; x < hdrData.width; x++)
                         {
                             ref var c = ref hdrData[x, y];
                             c = colorFilter(c);
@@ -89,7 +95,7 @@ public static class TexturePostProcessing
 
                             var c = new color()
                             {
-                                r = FromByte(c32.r, sRGB), 
+                                r = FromByte(c32.r, sRGB),
                                 g = FromByte(c32.g, sRGB),
                                 b = FromByte(c32.b, sRGB),
                                 a = FromByte(c32.a, sRGB)
@@ -110,7 +116,7 @@ public static class TexturePostProcessing
                 default:
                     throw new NotSupportedException("Unsupported texture message type: " + message);
             }
-        };
+        });
     }
 
     static float FromByte(byte value, bool sRGB) => MathF.Pow(value / 255f, 2.2f);
