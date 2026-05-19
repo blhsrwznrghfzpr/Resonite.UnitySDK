@@ -30,28 +30,24 @@ public class LilToonXiexeConverter
 
     public IAssetProvider<FrooxEngine.Material> UpdateConversion()
     {
-        Xiexe.MainTexture = Context.GetITexture2D(BakeMainTextureWithLilToon() ?? GetTexture("_MainTex"));
-        Xiexe.Color = Color.white.ToColorX_sRGB();
+        var bakedMainTexture = BakeMainTextureWithLilToon();
+        Xiexe.MainTexture = Context.GetITexture2D(bakedMainTexture ?? GetTexture("_MainTex"));
+        Xiexe.Color = bakedMainTexture != null ? Color.white.ToColorX_sRGB() : GetColor("_Color", UnityColor.white).ToColorX_sRGB();
         Xiexe.MainTextureScale = GetTextureScale("_MainTex");
         Xiexe.MainTextureOffset = GetTextureOffset("_MainTex");
-        Xiexe.Saturation = 1;
+        Xiexe.Saturation = bakedMainTexture != null ? 1 : GetVector("_MainTexHSVG", new Vector4(0, 1, 1, 1)).y;
         Xiexe.NormalMap = Context.GetITexture2D(GetTexture("_BumpMap"));
         Xiexe.NormalMapScale = GetTextureScale("_BumpMap");
         Xiexe.NormalMapOffset = GetTextureOffset("_BumpMap");
+        Xiexe.NormalScale = GetFloat("_BumpScale", 1);
         Xiexe.MetallicGlossMap = Context.GetITexture2D(GetTexture("_MetallicGlossMap"));
         Xiexe.MetallicGlossMapScale = GetTextureScale("_MetallicGlossMap");
         Xiexe.MetallicGlossMapOffset = GetTextureOffset("_MetallicGlossMap");
         Xiexe.EmissionMap = Context.GetITexture2D(GetTexture("_EmissionMap"));
         Xiexe.EmissionMapScale = GetTextureScale("_EmissionMap");
         Xiexe.EmissionMapOffset = GetTextureOffset("_EmissionMap");
-        Xiexe.RimColor = Color.white.ToColorX_sRGB();
-        Xiexe.RimAlbedoTint = 0;
-        Xiexe.RimAttenuationEffect = 1;
-        Xiexe.RimIntensity = 0;
-        Xiexe.RimRange = 0.7f;
-        Xiexe.RimThreshold = 0.1f;
-        Xiexe.RimSharpness = 0.1f;
-        Xiexe.Matcap = Context.GetITexture2D(GetTexture("_MatCapTex"));
+        UpdateRim();
+        UpdateMatcap();
         Xiexe.OcclusionMap = Context.GetITexture2D(GetTexture("_ShadowBorderMask"));
         Xiexe.OcclusionMapScale = GetTextureScale("_ShadowBorderMask");
         Xiexe.OcclusionMapOffset = GetTextureOffset("_ShadowBorderMask");
@@ -62,15 +58,73 @@ public class LilToonXiexeConverter
         Xiexe.ShadowRampMask = Context.GetITexture2D(GetTexture("_ShadowStrengthMask") ?? UnityTexture2D.whiteTexture);
         Xiexe.ShadowRampMaskScale = GetTextureScale("_ShadowStrengthMask");
         Xiexe.ShadowRampMaskOffset = GetTextureOffset("_ShadowStrengthMask");
-        Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
-        Xiexe.ShadowSharpness = 0.5f;
-        Xiexe.ShadowRimRange = 0.7f;
-        Xiexe.ShadowRimThreshold = 0.1f;
-        Xiexe.ShadowRimSharpness = 0.3f;
-        Xiexe.ShadowRimAlbedoTint = 0;
-        Xiexe.ColorMask = ColorMask.RGBA;
+        Xiexe.ShadowSharpness = 1 - GetFloat("_ShadowBlur", 0.1f);
+        UpdateShadowRim();
+        Xiexe.ColorMask = (ColorMask)GetFloat("_ColorMask", (float)ColorMask.RGBA);
 
         return Xiexe;
+    }
+
+    private void UpdateRim()
+    {
+        Xiexe.RimThreshold = GetFloat("_RimDirStrength", 0);
+
+        if (GetFloat("_UseRim", 0) == 0)
+        {
+            Xiexe.RimColor = Color.black.ToColorX_sRGB();
+            Xiexe.RimAlbedoTint = 0;
+            Xiexe.RimAttenuationEffect = 0;
+            Xiexe.RimIntensity = 0;
+            return;
+        }
+
+        var rimColor = GetColor("_RimColor", UnityColor.white);
+        Xiexe.RimColor = rimColor.ToColorX_Auto();
+        Xiexe.RimAlbedoTint = GetFloat("_RimMainStrength", 0);
+        Xiexe.RimAttenuationEffect = GetFloat("_RimShadowMask", 0.5f);
+        Xiexe.RimIntensity = rimColor.a;
+
+        var rimShape = GetXiexeRimShape("_RimBorder", "_RimBlur", "_RimFresnelPower");
+        Xiexe.RimRange = rimShape.x;
+        Xiexe.RimSharpness = rimShape.y;
+    }
+
+    private void UpdateMatcap()
+    {
+        if (GetFloat("_UseMatCap", 0) == 0)
+        {
+            Xiexe.Matcap = null;
+            Xiexe.MatcapTint = Color.black.ToColorX_sRGB();
+            return;
+        }
+
+        Xiexe.Matcap = Context.GetITexture2D(GetTexture("_MatCapTex"));
+        var matcapColor = GetColor("_MatCapColor", UnityColor.white);
+        var alpha = matcapColor.a;
+        matcapColor *= GetFloat("_MatCapBlend", 1) * alpha;
+        matcapColor.a = alpha;
+        Xiexe.MatcapTint = matcapColor.ToColorX_Auto();
+    }
+
+    private void UpdateShadowRim()
+    {
+        if (GetFloat("_UseRimShade", 0) == 0)
+        {
+            Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
+            Xiexe.ShadowRimAlbedoTint = 0;
+            return;
+        }
+
+        var rimShadeColor = GetColor("_RimShadeColor", new UnityColor(0.5f, 0.5f, 0.5f, 1));
+        var shadowRim = UnityColor.Lerp(UnityColor.white, rimShadeColor, rimShadeColor.a);
+        shadowRim.a = 1;
+        Xiexe.ShadowRim = shadowRim.ToColorX_Auto();
+        Xiexe.ShadowRimThreshold = 0;
+        Xiexe.ShadowRimAlbedoTint = 0;
+
+        var rimShadeShape = GetXiexeRimShape("_RimShadeBorder", "_RimShadeBlur", "_RimShadeFresnelPower");
+        Xiexe.ShadowRimRange = rimShadeShape.x;
+        Xiexe.ShadowRimSharpness = rimShadeShape.y;
     }
 
     private UnityTexture BakeMainTextureWithLilToon()
@@ -329,6 +383,21 @@ public class LilToonXiexeConverter
         }
     }
 
+    private Vector2 GetXiexeRimShape(string borderProperty, string blurProperty, string fresnelPowerProperty)
+    {
+        var border = GetFloat(borderProperty, 0.5f);
+        var blur = GetFloat(blurProperty, 0.1f);
+        var fresnelPower = Math.Max(GetFloat(fresnelPowerProperty, 1), 0.01f);
+        var borderMin = Mathf.Clamp01(border - blur * 0.5f);
+        var borderMax = Mathf.Clamp01(border + blur * 0.5f);
+        var xiexeMin = Mathf.Pow(borderMin, 1 / fresnelPower);
+        var xiexeMax = Mathf.Pow(borderMax, 1 / fresnelPower);
+
+        return new Vector2(
+            Mathf.Clamp01((xiexeMin + xiexeMax) * 0.5f),
+            Mathf.Clamp01((xiexeMax - xiexeMin) * 0.5f));
+    }
+
     private bool HasNonDefaultColor()
     {
         return Material.HasProperty("_Color") && Material.GetColor("_Color") != UnityColor.white;
@@ -342,6 +411,11 @@ public class LilToonXiexeConverter
     private Vector4 GetVector(string property, Vector4 defaultValue)
     {
         return Material.HasProperty(property) ? Material.GetVector(property) : defaultValue;
+    }
+
+    private UnityColor GetColor(string property, UnityColor defaultValue)
+    {
+        return Material.HasProperty(property) ? Material.GetColor(property) : defaultValue;
     }
 
     private UnityTexture GetTexture(string property)
