@@ -58,9 +58,9 @@ public class MToonXiexeConverter : IMToonXiexeConverter
         Xiexe.SpecularArea = 0.5f;
         Xiexe.Matcap = Context.GetITexture2D(Material.GetTexture("_SphereAdd"));
         Xiexe.MatcapTint = Color.white.ToColorX_sRGB();
-        Xiexe.OcclusionMap = Context.GetITexture2D(Material.GetTexture("_ReceiveShadowTexture"));
-        Xiexe.OcclusionMapScale = Material.GetTextureScale("_MainTex");
-        Xiexe.OcclusionMapOffset = Material.GetTextureOffset("_MainTex");
+        Xiexe.OcclusionMap = null;
+        Xiexe.OcclusionMapScale = Vector2.one;
+        Xiexe.OcclusionMapOffset = Vector2.zero;
         Xiexe.OcclusionColor = Color.black.ToColorX_sRGB();
         UpdateOutline();
         UpdateShadowRamp();
