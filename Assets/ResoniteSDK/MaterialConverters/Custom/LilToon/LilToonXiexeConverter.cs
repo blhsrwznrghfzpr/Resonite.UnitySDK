@@ -33,6 +33,9 @@ public class LilToonXiexeConverter
         var bakedMainTexture = BakeMainTextureWithLilToon();
         Xiexe.MainTexture = Context.GetITexture2D(bakedMainTexture ?? GetTexture("_MainTex"));
         Xiexe.Color = bakedMainTexture != null ? Color.white.ToColorX_sRGB() : GetColor("_Color", UnityColor.white).ToColorX_sRGB();
+        Xiexe.BlendMode = GetBlendMode();
+        Xiexe.ZWrite = GetFloat("_ZWrite", 1) > 0 ? ZWrite.On : ZWrite.Off;
+        Xiexe.AlphaClip = GetFloat("_Cutoff", 0.5f);
         Xiexe.MainTextureScale = GetTextureScale("_MainTex");
         Xiexe.MainTextureOffset = GetTextureOffset("_MainTex");
         Xiexe.Saturation = bakedMainTexture != null ? 1 : GetVector("_MainTexHSVG", new Vector4(0, 1, 1, 1)).y;
@@ -60,9 +63,39 @@ public class LilToonXiexeConverter
         Xiexe.ShadowRampMaskOffset = GetTextureOffset("_ShadowStrengthMask");
         Xiexe.ShadowSharpness = 1 - GetFloat("_ShadowBlur", 0.1f);
         UpdateShadowRim();
+        Xiexe.Culling = (Culling)(UnityEngine.Rendering.CullMode)GetFloat("_Cull", (float)UnityEngine.Rendering.CullMode.Back);
         Xiexe.ColorMask = (ColorMask)GetFloat("_ColorMask", (float)ColorMask.RGBA);
+        Xiexe.RenderQueue = Material.renderQueue;
 
         return Xiexe;
+    }
+
+    private BlendMode GetBlendMode()
+    {
+        var srcBlend = GetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
+        var dstBlend = GetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.Zero);
+
+        if (dstBlend == (float)UnityEngine.Rendering.BlendMode.Zero)
+        {
+            return GetFloat("_AlphaToMask", 0) > 0 ? BlendMode.Cutout : BlendMode.Opaque;
+        }
+
+        if (dstBlend == (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha)
+        {
+            return BlendMode.Transparent;
+        }
+
+        if (dstBlend == (float)UnityEngine.Rendering.BlendMode.One)
+        {
+            return BlendMode.Additive;
+        }
+
+        if (srcBlend == (float)UnityEngine.Rendering.BlendMode.DstColor)
+        {
+            return BlendMode.Multiply;
+        }
+
+        return BlendMode.Alpha;
     }
 
     private void UpdateRim()
