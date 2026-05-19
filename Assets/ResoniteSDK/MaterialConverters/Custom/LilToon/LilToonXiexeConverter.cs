@@ -80,7 +80,7 @@ public class LilToonXiexeConverter
 
         if (dstBlend == (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha)
         {
-            return BlendMode.Transparent;
+            return BlendMode.Alpha;
         }
 
         if (dstBlend == (float)UnityEngine.Rendering.BlendMode.One)
