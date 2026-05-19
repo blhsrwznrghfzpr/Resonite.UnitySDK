@@ -124,7 +124,9 @@ public class LilToonXiexeConverter
 
     private void UpdateMatcap()
     {
-        if (GetFloat("_UseMatCap", 0) == 0)
+        // Xiexe has no equivalent to lilToon's _MatCapBlendMask. Applying the MatCap
+        // without the mask changes the look, so only convert MatCap when no mask exists.
+        if (GetFloat("_UseMatCap", 0) == 0 || GetTexture("_MatCapBlendMask") != null)
         {
             Xiexe.Matcap = null;
             Xiexe.MatcapTint = Color.black.ToColorX_sRGB();
