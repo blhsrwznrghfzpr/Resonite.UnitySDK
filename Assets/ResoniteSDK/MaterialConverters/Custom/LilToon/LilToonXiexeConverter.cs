@@ -132,12 +132,25 @@ public class LilToonXiexeConverter
             return;
         }
 
-        Xiexe.Matcap = Context.GetITexture2D(GetTexture("_MatCapTex"));
+        Xiexe.Matcap = Context.GetITexture2D(GetTexture("_MatCapTex"), OpacifyProcessor);
         var matcapColor = GetColor("_MatCapColor", UnityColor.white);
         var alpha = matcapColor.a;
         matcapColor *= GetFloat("_MatCapBlend", 1) * alpha;
         matcapColor.a = alpha;
         Xiexe.MatcapTint = matcapColor.ToColorX_Auto();
+    }
+
+    private static readonly ResoniteLink.AssetMessagePostProcessor OpacifyProcessor = TexturePostProcessing.ProcessPixels(Opacify);
+
+    private static ResoniteLink.color Opacify(ResoniteLink.color c)
+    {
+        return new ResoniteLink.color()
+        {
+            r = c.r * c.a,
+            g = c.g * c.a,
+            b = c.b * c.a,
+            a = c.a,
+        };
     }
 
     private void UpdateEmission(UnityTexture albedoTexture)
