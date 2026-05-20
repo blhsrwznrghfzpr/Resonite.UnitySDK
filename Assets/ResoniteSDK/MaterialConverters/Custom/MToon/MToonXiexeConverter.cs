@@ -1,12 +1,7 @@
 using FrooxEngine;
 using UnityEngine;
 
-public interface IMToonXiexeConverter
-{
-    IAssetProvider<FrooxEngine.Material> UpdateConversion();
-}
-
-public class MToonXiexeConverter : IMToonXiexeConverter
+public static class MToonXiexeConverter
 {
     private const int MToon0RenderModeCutout = 1;
     private const int MToon0RenderModeTransparent = 2;
@@ -16,187 +11,175 @@ public class MToonXiexeConverter : IMToonXiexeConverter
     private const int OutlineWidthModeWorld = 1;
     private const int OutlineWidthModeScreen = 2;
 
-    private FrooxEngine.XiexeToonMaterial Xiexe;
-    private UnityEngine.Material Material;
-    private IConversionContext Context;
-
-    public MToonXiexeConverter(
-        FrooxEngine.XiexeToonMaterial Xiexe,
-        UnityEngine.Material Material,
-        IConversionContext Context)
+    public static IAssetProvider<FrooxEngine.Material> UpdateConversion(
+        FrooxEngine.XiexeToonMaterial xiexe,
+        UnityEngine.Material material,
+        IConversionContext context)
     {
-        this.Xiexe = Xiexe;
-        this.Material = Material;
-        this.Context = Context;
+        xiexe.MainTexture = context.GetITexture2D(material.GetTexture("_MainTex"));
+        xiexe.Color = material.GetColor("_Color").ToColorX_sRGB();
+        xiexe.UseVertexColors = false;
+        xiexe.BlendMode = GetBlendMode(material);
+        xiexe.ZWrite = GetZWrite(material);
+        xiexe.AlphaClip = material.GetFloat("_Cutoff");
+        xiexe.MainTextureScale = material.GetTextureScale("_MainTex");
+        xiexe.MainTextureOffset = material.GetTextureOffset("_MainTex");
+        xiexe.Saturation = 1;
+        xiexe.NormalMap = context.GetITexture2D(material.GetTexture("_BumpMap"));
+        xiexe.NormalMapScale = material.GetTextureScale("_MainTex");
+        xiexe.NormalMapOffset = material.GetTextureOffset("_MainTex");
+        xiexe.NormalScale = material.GetFloat("_BumpScale");
+        xiexe.Metallic = 0;
+        xiexe.Glossiness = 0;
+        xiexe.Reflectivity = 0;
+        xiexe.MetallicGlossMap = null;
+        xiexe.MetallicGlossMapScale = Vector2.one;
+        xiexe.MetallicGlossMapOffset = Vector2.zero;
+        UpdateEmission(xiexe, material, context);
+        UpdateRim(xiexe, material);
+        xiexe.SpecularIntensity = 0;
+        xiexe.SpecularArea = 0.5f;
+        xiexe.Matcap = context.GetITexture2D(material.GetTexture("_SphereAdd"));
+        xiexe.MatcapTint = Color.white.ToColorX_sRGB();
+        xiexe.OcclusionMap = null;
+        xiexe.OcclusionMapScale = Vector2.one;
+        xiexe.OcclusionMapOffset = Vector2.zero;
+        xiexe.OcclusionColor = Color.black.ToColorX_sRGB();
+        UpdateOutline(xiexe, material, context);
+        UpdateShadowRamp(xiexe, material, context);
+        xiexe.ThicknessMap = null;
+        xiexe.ThicknessMapScale = Vector2.one;
+        xiexe.ThicknessMapOffset = Vector2.zero;
+        xiexe.SubsurfaceColor = Color.black.ToColorX_sRGB();
+        xiexe.SubsurfaceDistortion = 1;
+        xiexe.SubsurfacePower = 1;
+        xiexe.SubsurfaceScale = 1;
+        xiexe.OffsetFactor = 0;
+        xiexe.OffsetUnits = 0;
+        xiexe.Culling = GetCulling(material);
+        xiexe.ColorMask = ColorMask.RGBA;
+        xiexe.AlbedoUV = 0;
+        xiexe.NormalUV = 0;
+        xiexe.MetallicUV = 0;
+        xiexe.ThicknessUV = 0;
+        xiexe.OcclusionUV = 0;
+        xiexe.EmissionUV = 0;
+        xiexe.RenderQueue = material.renderQueue;
+
+        return xiexe;
     }
 
-    public IAssetProvider<FrooxEngine.Material> UpdateConversion()
+    private static void UpdateEmission(FrooxEngine.XiexeToonMaterial xiexe, UnityEngine.Material material, IConversionContext context)
     {
-
-        Xiexe.MainTexture = Context.GetITexture2D(Material.GetTexture("_MainTex"));
-        Xiexe.Color = Material.GetColor("_Color").ToColorX_sRGB();
-        Xiexe.UseVertexColors = false;
-        Xiexe.BlendMode = GetBlendMode();
-        Xiexe.ZWrite = GetZWrite();
-        Xiexe.AlphaClip = Material.GetFloat("_Cutoff");
-        Xiexe.MainTextureScale = Material.GetTextureScale("_MainTex");
-        Xiexe.MainTextureOffset = Material.GetTextureOffset("_MainTex");
-        Xiexe.Saturation = 1;
-        Xiexe.NormalMap = Context.GetITexture2D(Material.GetTexture("_BumpMap"));
-        Xiexe.NormalMapScale = Material.GetTextureScale("_MainTex");
-        Xiexe.NormalMapOffset = Material.GetTextureOffset("_MainTex");
-        Xiexe.NormalScale = Material.GetFloat("_BumpScale");
-        Xiexe.Metallic = 0;
-        Xiexe.Glossiness = 0;
-        Xiexe.Reflectivity = 0;
-        Xiexe.MetallicGlossMap = null;
-        Xiexe.MetallicGlossMapScale = Vector2.one;
-        Xiexe.MetallicGlossMapOffset = Vector2.zero;
-        UpdateEmission();
-        UpdateRim();
-        Xiexe.SpecularIntensity = 0;
-        Xiexe.SpecularArea = 0.5f;
-        Xiexe.Matcap = Context.GetITexture2D(Material.GetTexture("_SphereAdd"));
-        Xiexe.MatcapTint = Color.white.ToColorX_sRGB();
-        Xiexe.OcclusionMap = null;
-        Xiexe.OcclusionMapScale = Vector2.one;
-        Xiexe.OcclusionMapOffset = Vector2.zero;
-        Xiexe.OcclusionColor = Color.black.ToColorX_sRGB();
-        UpdateOutline();
-        UpdateShadowRamp();
-        Xiexe.ThicknessMap = null;
-        Xiexe.ThicknessMapScale = Vector2.one;
-        Xiexe.ThicknessMapOffset = Vector2.zero;
-        Xiexe.SubsurfaceColor = Color.black.ToColorX_sRGB();
-        Xiexe.SubsurfaceDistortion = 1;
-        Xiexe.SubsurfacePower = 1;
-        Xiexe.SubsurfaceScale = 1;
-        Xiexe.OffsetFactor = 0;
-        Xiexe.OffsetUnits = 0;
-        Xiexe.Culling = GetCulling();
-        Xiexe.ColorMask = ColorMask.RGBA;
-        Xiexe.AlbedoUV = 0;
-        Xiexe.NormalUV = 0;
-        Xiexe.MetallicUV = 0;
-        Xiexe.ThicknessUV = 0;
-        Xiexe.OcclusionUV = 0;
-        Xiexe.EmissionUV = 0;
-        Xiexe.RenderQueue = Material.renderQueue;
-
-        return Xiexe;
-    }
-
-    private void UpdateEmission()
-    {
-        var emissionColor = Material.GetColor("_EmissionColor");
-        Xiexe.EmissionColor = emissionColor.ToColorX_Linear();
+        var emissionColor = material.GetColor("_EmissionColor");
+        xiexe.EmissionColor = emissionColor.ToColorX_Linear();
 
         if (emissionColor.maxColorComponent <= 0)
         {
-            Xiexe.EmissionMap = null;
-            Xiexe.EmissionMapScale = Vector2.one;
-            Xiexe.EmissionMapOffset = Vector2.zero;
+            xiexe.EmissionMap = null;
+            xiexe.EmissionMapScale = Vector2.one;
+            xiexe.EmissionMapOffset = Vector2.zero;
             return;
         }
 
-        var emissionMap = Material.GetTexture("_EmissionMap");
+        var emissionMap = material.GetTexture("_EmissionMap");
         if (emissionMap != null)
         {
-            Xiexe.EmissionMap = Context.GetITexture2D(emissionMap);
-            Xiexe.EmissionMapOffset = Material.GetTextureOffset("_MainTex");
-            Xiexe.EmissionMapScale = Material.GetTextureScale("_MainTex");
+            xiexe.EmissionMap = context.GetITexture2D(emissionMap);
+            xiexe.EmissionMapOffset = material.GetTextureOffset("_MainTex");
+            xiexe.EmissionMapScale = material.GetTextureScale("_MainTex");
         }
         else
         {
-            Xiexe.EmissionMap = Context.GetITexture2D(UnityEngine.Texture2D.whiteTexture);
-            Xiexe.EmissionMapScale = Material.GetTextureScale("_MainTex");
-            Xiexe.EmissionMapOffset = Material.GetTextureOffset("_MainTex");
+            xiexe.EmissionMap = context.GetITexture2D(UnityEngine.Texture2D.whiteTexture);
+            xiexe.EmissionMapScale = material.GetTextureScale("_MainTex");
+            xiexe.EmissionMapOffset = material.GetTextureOffset("_MainTex");
         }
     }
 
-    private void UpdateRim()
+    private static void UpdateRim(FrooxEngine.XiexeToonMaterial xiexe, UnityEngine.Material material)
     {
-        var rimColor = Material.GetColor("_RimColor");
-        Xiexe.RimColor = rimColor.ToColorX_sRGB();
-        Xiexe.RimAlbedoTint = 0;
-        Xiexe.RimAttenuationEffect = Material.GetFloat("_RimLightingMix");
-        Xiexe.RimIntensity = rimColor.maxColorComponent;
-        Xiexe.RimRange = 1 / Mathf.Max(Material.GetFloat("_RimFresnelPower"), 0.001f);
-        Xiexe.RimThreshold = Material.GetFloat("_RimLift");
-        Xiexe.RimSharpness = 0.5f;
+        var rimColor = material.GetColor("_RimColor");
+        xiexe.RimColor = rimColor.ToColorX_sRGB();
+        xiexe.RimAlbedoTint = 0;
+        xiexe.RimAttenuationEffect = material.GetFloat("_RimLightingMix");
+        xiexe.RimIntensity = rimColor.maxColorComponent;
+        xiexe.RimRange = 1 / Mathf.Max(material.GetFloat("_RimFresnelPower"), 0.001f);
+        xiexe.RimThreshold = material.GetFloat("_RimLift");
+        xiexe.RimSharpness = 0.5f;
     }
 
-    private void UpdateOutline()
+    private static void UpdateOutline(FrooxEngine.XiexeToonMaterial xiexe, UnityEngine.Material material, IConversionContext context)
     {
-        if (GetOutlineWidthMode() == OutlineWidthModeNone ||
-            Material.GetFloat("_OutlineWidth") <= 0)
+        if (GetOutlineWidthMode(material) == OutlineWidthModeNone ||
+            material.GetFloat("_OutlineWidth") <= 0)
         {
-            Xiexe.Outline = XiexeToonMaterial.OutlineStyle.None;
-            Xiexe.OutlineWidth = 1;
-            Xiexe.OutlineColor = Color.black.ToColorX_sRGB();
-            Xiexe.OutlineAlbedoTint = false;
-            Xiexe.OutlineMask = null;
+            xiexe.Outline = XiexeToonMaterial.OutlineStyle.None;
+            xiexe.OutlineWidth = 1;
+            xiexe.OutlineColor = Color.black.ToColorX_sRGB();
+            xiexe.OutlineAlbedoTint = false;
+            xiexe.OutlineMask = null;
             return;
         }
 
-        if (Material.GetFloat("_OutlineColorMode") > 0 || Material.GetFloat("_OutlineLightingMix") >= 0.5f)
+        if (material.GetFloat("_OutlineColorMode") > 0 || material.GetFloat("_OutlineLightingMix") >= 0.5f)
         {
-            Xiexe.Outline = XiexeToonMaterial.OutlineStyle.Lit;
+            xiexe.Outline = XiexeToonMaterial.OutlineStyle.Lit;
         }
         else
         {
-            Xiexe.Outline = XiexeToonMaterial.OutlineStyle.Emissive;
+            xiexe.Outline = XiexeToonMaterial.OutlineStyle.Emissive;
         }
 
-        Xiexe.OutlineWidth = Material.GetFloat("_OutlineWidth");
-        Xiexe.OutlineColor = Material.GetColor("_OutlineColor").ToColorX_Linear();
-        Xiexe.OutlineAlbedoTint = Material.GetFloat("_OutlineLightingMix") >= 0.5f;
-        Xiexe.OutlineMask = Context.GetITexture2D(Material.GetTexture("_OutlineWidthTexture"));
+        xiexe.OutlineWidth = material.GetFloat("_OutlineWidth");
+        xiexe.OutlineColor = material.GetColor("_OutlineColor").ToColorX_Linear();
+        xiexe.OutlineAlbedoTint = material.GetFloat("_OutlineLightingMix") >= 0.5f;
+        xiexe.OutlineMask = context.GetITexture2D(material.GetTexture("_OutlineWidthTexture"));
     }
 
-    private int GetOutlineWidthMode()
+    private static int GetOutlineWidthMode(UnityEngine.Material material)
     {
-        if (Material.IsKeywordEnabled("MTOON_OUTLINE_WIDTH_WORLD"))
+        if (material.IsKeywordEnabled("MTOON_OUTLINE_WIDTH_WORLD"))
         {
             return OutlineWidthModeWorld;
         }
-        if (Material.IsKeywordEnabled("MTOON_OUTLINE_WIDTH_SCREEN"))
+        if (material.IsKeywordEnabled("MTOON_OUTLINE_WIDTH_SCREEN"))
         {
             return OutlineWidthModeScreen;
         }
 
-        return Mathf.RoundToInt(Material.GetFloat("_OutlineWidthMode"));
+        return Mathf.RoundToInt(material.GetFloat("_OutlineWidthMode"));
     }
 
-    private void UpdateShadowRamp()
+    private static void UpdateShadowRamp(FrooxEngine.XiexeToonMaterial xiexe, UnityEngine.Material material, IConversionContext context)
     {
-        Xiexe.ShadowRamp = Context.GetITexture2D(GenerateShadowRamp());
-        Xiexe.ShadowRampMask = Context.GetITexture2D(Material.GetTexture("_ShadingGradeTexture") ?? UnityEngine.Texture2D.whiteTexture);
-        Xiexe.ShadowRampMaskOffset = Material.GetTextureOffset("_MainTex");
-        Xiexe.ShadowRampMaskScale = Material.GetTextureScale("_MainTex");
-        Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
-        Xiexe.ShadowSharpness = 0;
-        Xiexe.ShadowRimRange = 0.7f;
-        Xiexe.ShadowRimThreshold = 0.1f;
-        Xiexe.ShadowRimSharpness = 0.3f;
-        Xiexe.ShadowRimAlbedoTint = 0;
+        xiexe.ShadowRamp = context.GetITexture2D(GenerateShadowRamp(material));
+        xiexe.ShadowRampMask = context.GetITexture2D(material.GetTexture("_ShadingGradeTexture") ?? UnityEngine.Texture2D.whiteTexture);
+        xiexe.ShadowRampMaskOffset = material.GetTextureOffset("_MainTex");
+        xiexe.ShadowRampMaskScale = material.GetTextureScale("_MainTex");
+        xiexe.ShadowRim = Color.white.ToColorX_sRGB();
+        xiexe.ShadowSharpness = 0;
+        xiexe.ShadowRimRange = 0.7f;
+        xiexe.ShadowRimThreshold = 0.1f;
+        xiexe.ShadowRimSharpness = 0.3f;
+        xiexe.ShadowRimAlbedoTint = 0;
     }
 
-    private UnityEngine.Texture GenerateShadowRamp()
+    private static UnityEngine.Texture GenerateShadowRamp(UnityEngine.Material material)
     {
         const int rampWidth = 256;
         const int rampHeight = 256;
         var ramp = new UnityEngine.Texture2D(rampWidth, rampHeight, TextureFormat.RGBA32, false)
         {
-            name = $"MToonShadowRamp - {Material.name}"
+            name = $"MToonShadowRamp - {material.name}"
         };
         ramp.wrapModeU = TextureWrapMode.Clamp;
         ramp.wrapModeV = TextureWrapMode.Clamp;
 
-        var shadowMultiplier = GetShadowMultiplier();
-        var shadeShift = Material.GetFloat("_ShadeShift");
-        var shadeToony = Mathf.Clamp01(Material.GetFloat("_ShadeToony"));
-        var shadingGradeRate = Material.GetFloat("_ShadingGradeRate");
+        var shadowMultiplier = GetShadowMultiplier(material);
+        var shadeShift = material.GetFloat("_ShadeShift");
+        var shadeToony = Mathf.Clamp01(material.GetFloat("_ShadeToony"));
+        var shadingGradeRate = material.GetFloat("_ShadingGradeRate");
         var shadeMin = shadeShift;
         var shadeMax = Mathf.Lerp(1, shadeShift, shadeToony);
         var shadeRange = Mathf.Max(shadeMax - shadeMin, 0.0001f);
@@ -221,10 +204,10 @@ public class MToonXiexeConverter : IMToonXiexeConverter
         return ramp;
     }
 
-    private Color GetShadowMultiplier()
+    private static Color GetShadowMultiplier(UnityEngine.Material material)
     {
-        var baseColor = Material.GetColor("_Color");
-        var shadeColor = Material.GetColor("_ShadeColor");
+        var baseColor = material.GetColor("_Color");
+        var shadeColor = material.GetColor("_ShadeColor");
         return new(
             SafeColorRatio(shadeColor.r, baseColor.r),
             SafeColorRatio(shadeColor.g, baseColor.g),
@@ -232,7 +215,7 @@ public class MToonXiexeConverter : IMToonXiexeConverter
             1);
     }
 
-    private float SafeColorRatio(float numerator, float denominator)
+    private static float SafeColorRatio(float numerator, float denominator)
     {
         if (denominator <= 0.0001f)
         {
@@ -241,9 +224,9 @@ public class MToonXiexeConverter : IMToonXiexeConverter
         return Mathf.Clamp01(numerator / denominator);
     }
 
-    private BlendMode GetBlendMode()
+    private static BlendMode GetBlendMode(UnityEngine.Material material)
     {
-        var renderMode = Mathf.RoundToInt(Material.GetFloat("_BlendMode"));
+        var renderMode = Mathf.RoundToInt(material.GetFloat("_BlendMode"));
         return renderMode switch
         {
             MToon0RenderModeCutout => BlendMode.Cutout,
@@ -253,13 +236,13 @@ public class MToonXiexeConverter : IMToonXiexeConverter
         };
     }
 
-    private ZWrite GetZWrite()
+    private static ZWrite GetZWrite(UnityEngine.Material material)
     {
-        return Material.GetFloat("_ZWrite") > 0 ? ZWrite.On : ZWrite.Off;
+        return material.GetFloat("_ZWrite") > 0 ? ZWrite.On : ZWrite.Off;
     }
 
-    private Culling GetCulling()
+    private static Culling GetCulling(UnityEngine.Material material)
     {
-        return (Culling)(UnityEngine.Rendering.CullMode)Mathf.RoundToInt(Material.GetFloat("_CullMode"));
+        return (Culling)(UnityEngine.Rendering.CullMode)Mathf.RoundToInt(material.GetFloat("_CullMode"));
     }
 }

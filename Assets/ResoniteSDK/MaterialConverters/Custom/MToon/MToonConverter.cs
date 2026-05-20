@@ -23,7 +23,7 @@ public class MToonConverter : ResoniteMaterialConverter
             XiexeComponent = gameObject.AddComponent<FrooxEngine.XiexeToonMaterialWrapper>();
         }
 
-        var converted = new MToonXiexeConverter(XiexeComponent.Data, material, context).UpdateConversion();
+        var converted = MToonXiexeConverter.UpdateConversion(XiexeComponent.Data, material, context);
         UpdateUvScrollPanners(material, XiexeComponent.Data);
         return converted;
     }
