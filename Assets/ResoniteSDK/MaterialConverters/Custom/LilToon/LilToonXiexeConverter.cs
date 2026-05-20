@@ -287,6 +287,13 @@ public class LilToonXiexeConverter
 
     private UnityTexture BakeMainTextureWithLilToon()
     {
+        if (UsesMainLayerWithNonMainUV("_UseMain2ndTex", "_Main2ndTex", "_Main2ndTex_UVMode") ||
+            UsesMainLayerWithNonMainUV("_UseMain3rdTex", "_Main3rdTex", "_Main3rdTex_UVMode"))
+        {
+            UnityEngine.Debug.LogWarning($"Skipping lilToon main texture bake for {Material.name} because an enabled 2nd/3rd main texture uses a non-UV0 coordinate set.");
+            return null;
+        }
+
         var shouldBakeMain = GetVector("_MainTexHSVG", new Vector4(0, 1, 1, 1)) != new Vector4(0, 1, 1, 1)
             || GetFloat("_MainGradationStrength", 0) != 0
             || GetFloat("_UseMain2ndTex", 0) != 0
@@ -372,6 +379,13 @@ public class LilToonXiexeConverter
         }
 
         return CacheBakedTexture(bakedTexture, sourceTexture2D, ref AssetCache.MainTexture);
+    }
+
+    private bool UsesMainLayerWithNonMainUV(string useProperty, string textureProperty, string uvModeProperty)
+    {
+        return GetFloat(useProperty, 0) != 0
+            && GetTexture(textureProperty) != null
+            && GetFloat(uvModeProperty, 0) != 0;
     }
 
     private UnityTexture BakeEmissionMapWithLilToon(UnityTexture emissionMap, UnityTexture emissionBlendMask, UnityTexture albedoTexture)
