@@ -49,9 +49,7 @@ public class LilToonXiexeConverter
         UpdateEmission();
         UpdateRim();
         UpdateMatcap();
-        Xiexe.OcclusionMap = Context.GetITexture2D(GetTexture("_ShadowBorderMask"));
-        Xiexe.OcclusionMapScale = GetTextureScale("_ShadowBorderMask");
-        Xiexe.OcclusionMapOffset = GetTextureOffset("_ShadowBorderMask");
+        UpdateOcclusion();
         UpdateOutline();
         Xiexe.ShadowRamp = Context.GetITexture2D(GetTexture("_Ramp") ?? BakeShadowRampWithLilToon());
         // XiexeToon's null ShadowRampMask behaves differently from lilToon's null
@@ -163,6 +161,24 @@ public class LilToonXiexeConverter
         Xiexe.EmissionMapScale = GetEmissionMapScale(emissionMap, emissionBlendMask);
         Xiexe.EmissionMapOffset = GetEmissionMapOffset(emissionMap, emissionBlendMask);
         Xiexe.EmissionUV = emissionMap != null ? (int)GetFloat("_EmissionMap_UVMode", 0) : 0;
+    }
+
+    private void UpdateOcclusion()
+    {
+        Xiexe.OcclusionMap = Context.GetITexture2D(GetTexture("_ShadowBorderMask"));
+        Xiexe.OcclusionMapScale = GetTextureScale("_ShadowBorderMask");
+        Xiexe.OcclusionMapOffset = GetTextureOffset("_ShadowBorderMask");
+
+        if (Material.HasProperty("_UseShadow") && Material.GetFloat("_UseShadow") == 0)
+        {
+            Xiexe.OcclusionColor = Color.black.ToColorX_sRGB();
+            return;
+        }
+
+        var shadowColor = GetColor("_ShadowColor", new UnityColor(0.82f, 0.76f, 0.85f, 1));
+        shadowColor.a = 1;
+        var occlusionColor = UnityColor.Lerp(UnityColor.white, shadowColor, GetFloat("_ShadowStrength", 1));
+        Xiexe.OcclusionColor = occlusionColor.ToColorX_Auto();
     }
 
     private UnityTexture GetEmissionMap(UnityTexture emissionMap, UnityTexture emissionBlendMask)
