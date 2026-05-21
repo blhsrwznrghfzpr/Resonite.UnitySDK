@@ -46,6 +46,7 @@ public class LilToonXiexeConverter
         Xiexe.MetallicGlossMap = Context.GetITexture2D(GetTexture("_MetallicGlossMap"));
         Xiexe.MetallicGlossMapScale = GetTextureScale("_MetallicGlossMap");
         Xiexe.MetallicGlossMapOffset = GetTextureOffset("_MetallicGlossMap");
+        UpdateReflections();
         UpdateEmission(bakedMainTexture ?? GetTexture("_MainTex"));
         UpdateRim();
         UpdateMatcap();
@@ -92,6 +93,29 @@ public class LilToonXiexeConverter
         }
 
         return BlendMode.Alpha;
+    }
+
+    private void UpdateReflections()
+    {
+        if (GetFloat("_UseReflection", 0) == 0)
+        {
+            Xiexe.MetallicGlossMap = null;
+            Xiexe.Metallic = 0;
+            Xiexe.Glossiness = 0;
+            Xiexe.Reflectivity = 1;
+            Xiexe.SpecularIntensity = 0;
+            return;
+        }
+
+        Xiexe.Metallic = GetFloat("_Metallic", 0);
+        Xiexe.Reflectivity = GetFloat("_Reflectance", 0.04f);
+        Xiexe.SpecularIntensity = GetFloat("_ApplySpecular", 1) > 0
+            ? 100 * GetFloat("_Smoothness", 0.5f)
+            : 0;
+        Xiexe.SpecularArea = 1 - GetFloat("_SpecularBorder", 0.5f);
+        Xiexe.Glossiness = GetFloat("_ApplyReflection", 0) > 0
+            ? GetFloat("_Smoothness", 0.5f)
+            : 0;
     }
 
     private void UpdateRim()
