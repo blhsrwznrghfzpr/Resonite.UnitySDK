@@ -300,17 +300,16 @@ public class LilToonXiexeConverter
 
     private UnityTexture BakeMainTextureWithLilToon()
     {
-        if (UsesMainLayerWithNonMainUV("_UseMain2ndTex", "_Main2ndTex", "_Main2ndTex_UVMode") ||
-            UsesMainLayerWithNonMainUV("_UseMain3rdTex", "_Main3rdTex", "_Main3rdTex_UVMode"))
-        {
-            UnityEngine.Debug.LogWarning($"Skipping lilToon main texture bake for {Material.name} because an enabled 2nd/3rd main texture uses a non-UV0 coordinate set.");
-            return null;
-        }
+        var useMain2ndTexture = UsesMainLayer("_UseMain2ndTex", "_Main2ndTex");
+        var useMain3rdTexture = UsesMainLayer("_UseMain3rdTex", "_Main3rdTex");
+        var main2ndUsesUv0 = GetFloat("_Main2ndTex_UVMode", 0) == 0;
+        var main3rdUsesUv0 = GetFloat("_Main3rdTex_UVMode", 0) == 0;
 
         var shouldBakeMain = GetVector("_MainTexHSVG", new Vector4(0, 1, 1, 1)) != new Vector4(0, 1, 1, 1)
             || GetFloat("_MainGradationStrength", 0) != 0
-            || GetFloat("_UseMain2ndTex", 0) != 0
-            || GetFloat("_UseMain3rdTex", 0) != 0;
+            // Non-UV0 2nd/3rd textures cannot be preserved in a single UV0 bake.
+            || (useMain2ndTexture && main2ndUsesUv0)
+            || (useMain3rdTexture && main3rdUsesUv0);
         var shouldBakeAlpha = GetFloat("_AlphaMaskMode", 0) != 0 && GetTexture("_AlphaMask") != null;
 
         if (!shouldBakeMain && !shouldBakeAlpha)
@@ -348,6 +347,16 @@ public class LilToonXiexeConverter
             SetFallbackTexture(bakerMaterial, "_Main3rdTex", UnityTexture2D.whiteTexture);
             SetFallbackTexture(bakerMaterial, "_Main3rdBlendMask", UnityTexture2D.whiteTexture);
             SetFallbackTexture(bakerMaterial, "_AlphaMask", UnityTexture2D.whiteTexture);
+
+            if (useMain2ndTexture && !main2ndUsesUv0)
+            {
+                bakerMaterial.SetFloat("_UseMain2ndTex", 0);
+            }
+
+            if (useMain3rdTexture && !main3rdUsesUv0)
+            {
+                bakerMaterial.SetFloat("_UseMain3rdTex", 0);
+            }
 
             if (shouldBakeMain)
             {
@@ -394,11 +403,10 @@ public class LilToonXiexeConverter
         return CacheBakedTexture(bakedTexture, sourceTexture2D, ref AssetCache.MainTexture);
     }
 
-    private bool UsesMainLayerWithNonMainUV(string useProperty, string textureProperty, string uvModeProperty)
+    private bool UsesMainLayer(string useProperty, string textureProperty)
     {
         return GetFloat(useProperty, 0) != 0
-            && GetTexture(textureProperty) != null
-            && GetFloat(uvModeProperty, 0) != 0;
+            && GetTexture(textureProperty) != null;
     }
 
     private UnityTexture BakeEmissionMapWithLilToon(UnityTexture emissionMap, UnityTexture emissionBlendMask, UnityTexture albedoTexture)
