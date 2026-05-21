@@ -140,7 +140,7 @@ public class LilToonXiexeConverter
         Xiexe.MatcapTint = matcapColor.ToColorX_Auto();
     }
 
-    private static readonly ResoniteLink.AssetMessagePostProcessor OpacifyProcessor = TexturePostProcessing.ProcessPixels(Opacify);
+    private static readonly AssetMessagePostProcessor OpacifyProcessor = TexturePostProcessing.ProcessPixels(Opacify);
 
     private static ResoniteLink.color Opacify(ResoniteLink.color c)
     {
