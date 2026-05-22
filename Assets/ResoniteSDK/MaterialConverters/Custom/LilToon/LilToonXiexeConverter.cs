@@ -66,6 +66,14 @@ public class LilToonXiexeConverter
 
     private BlendMode GetBlendMode()
     {
+        var shaderName = Material.shader?.name;
+        // Hidden/lilToonRefraction and Hidden/lilToonRefractionBlur use GrabPass
+        // with Blend One Zero, so blend factors alone would make them look opaque.
+        if (!string.IsNullOrEmpty(shaderName) && shaderName.Contains("Refraction"))
+        {
+            return BlendMode.Alpha;
+        }
+
         var srcBlend = GetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.One);
         var dstBlend = GetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.Zero);
 
