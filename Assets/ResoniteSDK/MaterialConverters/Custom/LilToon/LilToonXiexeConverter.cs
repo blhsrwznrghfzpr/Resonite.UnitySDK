@@ -126,13 +126,28 @@ public class LilToonXiexeConverter
         // lilToon uses Smoothness for both direct specular and optional environment
         // reflections. Xiexe separates those concerns: SpecularArea shapes direct
         // specular, while Glossiness affects indirect/environment reflection roughness.
-        Xiexe.SpecularArea = Mathf.Clamp01((GetFloat("_Smoothness", 0.5f) + GetFloat("_SpecularBorder", 0.5f)) * 0.5f);
+        Xiexe.SpecularArea = GetXiexeSpecularArea();
         // _ApplyReflection is lilToon's "Environment Reflections" toggle. Keep
         // Glossiness at 0 when it is disabled so Xiexe does not add a sharp
         // environment reflection to materials that only asked for direct specular.
         Xiexe.Glossiness = GetFloat("_ApplyReflection", 0) > 0
             ? GetFloat("_Smoothness", 0.5f)
             : 0;
+    }
+
+    private float GetXiexeSpecularArea()
+    {
+        var smoothness = GetFloat("_Smoothness", 0.5f);
+        if (GetFloat("_SpecularToon", 0) == 0)
+        {
+            return Mathf.Clamp01(smoothness);
+        }
+
+        // lilToon toon specular thresholds pow(N.H, 1 / roughness) with
+        // _SpecularBorder. Xiexe has one smoothness-like direct specular control,
+        // so use the tighter of Smoothness and the inverse border. Averaging these
+        // values makes low-border materials such as PLUSONE/Platinum Body too broad.
+        return Mathf.Clamp01(Mathf.Max(smoothness, 1 - GetFloat("_SpecularBorder", 0.5f)));
     }
 
     private void UpdateRim()
