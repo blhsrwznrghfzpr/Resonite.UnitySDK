@@ -329,6 +329,9 @@ public class LilToonXiexeConverter
         if (GetFloat("_UseRimShade", 0) == 0)
         {
             Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
+            Xiexe.ShadowRimThreshold = 1;
+            Xiexe.ShadowRimRange = 0.7f;
+            Xiexe.ShadowRimSharpness = 0.3f;
             Xiexe.ShadowRimAlbedoTint = 0;
             return;
         }
