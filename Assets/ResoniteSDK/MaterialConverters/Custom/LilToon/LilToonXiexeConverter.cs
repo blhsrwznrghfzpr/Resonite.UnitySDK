@@ -123,7 +123,13 @@ public class LilToonXiexeConverter
         Xiexe.SpecularIntensity = GetFloat("_ApplySpecular", 1) > 0
             ? 100 * GetFloat("_Reflectance", 0.04f) * reflectionColor.a
             : 0;
+        // lilToon uses Smoothness for both direct specular and optional environment
+        // reflections. Xiexe separates those concerns: SpecularArea shapes direct
+        // specular, while Glossiness affects indirect/environment reflection roughness.
         Xiexe.SpecularArea = Mathf.Clamp01((GetFloat("_Smoothness", 0.5f) + GetFloat("_SpecularBorder", 0.5f)) * 0.5f);
+        // _ApplyReflection is lilToon's "Environment Reflections" toggle. Keep
+        // Glossiness at 0 when it is disabled so Xiexe does not add a sharp
+        // environment reflection to materials that only asked for direct specular.
         Xiexe.Glossiness = GetFloat("_ApplyReflection", 0) > 0
             ? GetFloat("_Smoothness", 0.5f)
             : 0;
