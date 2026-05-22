@@ -43,9 +43,6 @@ public class LilToonXiexeConverter
         Xiexe.NormalMapScale = GetTextureScale("_BumpMap");
         Xiexe.NormalMapOffset = GetTextureOffset("_BumpMap");
         Xiexe.NormalScale = GetFloat("_BumpScale", 1);
-        Xiexe.MetallicGlossMap = Context.GetITexture2D(GetTexture("_MetallicGlossMap"));
-        Xiexe.MetallicGlossMapScale = GetTextureScale("_MetallicGlossMap");
-        Xiexe.MetallicGlossMapOffset = GetTextureOffset("_MetallicGlossMap");
         UpdateReflections();
         UpdateEmission(bakedMainTexture ?? GetTexture("_MainTex"));
         UpdateRim();
@@ -107,12 +104,26 @@ public class LilToonXiexeConverter
             return;
         }
 
+        var metallicGlossMap = GetTexture("_MetallicGlossMap");
+        var smoothnessTexture = GetTexture("_SmoothnessTex");
+        var xiexeMetallicGlossMap = smoothnessTexture != null
+            ? BakeMetallicGlossMapForXiexe(metallicGlossMap, smoothnessTexture)
+            : metallicGlossMap;
+        var metallicGlossMapProcessor = metallicGlossMap != null && smoothnessTexture == null
+            ? MetallicOnlyProcessor
+            : null;
+        var metallicGlossTransformProperty = metallicGlossMap != null ? "_MetallicGlossMap" : "_SmoothnessTex";
+
+        Xiexe.MetallicGlossMap = Context.GetITexture2D(xiexeMetallicGlossMap, metallicGlossMapProcessor);
+        Xiexe.MetallicGlossMapScale = GetTextureScale(metallicGlossTransformProperty);
+        Xiexe.MetallicGlossMapOffset = GetTextureOffset(metallicGlossTransformProperty);
         Xiexe.Metallic = GetFloat("_Metallic", 0);
         Xiexe.Reflectivity = GetFloat("_Reflectance", 0.04f);
+        var reflectionColor = GetColor("_ReflectionColor", UnityColor.white);
         Xiexe.SpecularIntensity = GetFloat("_ApplySpecular", 1) > 0
-            ? 100 * GetFloat("_Smoothness", 0.5f)
+            ? 100 * GetFloat("_Reflectance", 0.04f) * reflectionColor.a
             : 0;
-        Xiexe.SpecularArea = 1 - GetFloat("_SpecularBorder", 0.5f);
+        Xiexe.SpecularArea = Mathf.Clamp01((GetFloat("_Smoothness", 0.5f) + GetFloat("_SpecularBorder", 0.5f)) * 0.5f);
         Xiexe.Glossiness = GetFloat("_ApplyReflection", 0) > 0
             ? GetFloat("_Smoothness", 0.5f)
             : 0;
@@ -165,6 +176,7 @@ public class LilToonXiexeConverter
     }
 
     private static readonly AssetMessagePostProcessor OpacifyProcessor = TexturePostProcessing.ProcessPixels(Opacify);
+    private static readonly AssetMessagePostProcessor MetallicOnlyProcessor = TexturePostProcessing.ProcessPixels(MetallicOnly);
 
     private static ResoniteLink.color Opacify(ResoniteLink.color c)
     {
@@ -174,6 +186,17 @@ public class LilToonXiexeConverter
             g = c.g * c.a,
             b = c.b * c.a,
             a = c.a,
+        };
+    }
+
+    private static ResoniteLink.color MetallicOnly(ResoniteLink.color c)
+    {
+        return new ResoniteLink.color()
+        {
+            r = c.r,
+            g = 0,
+            b = 0,
+            a = 1,
         };
     }
 
@@ -431,6 +454,88 @@ public class LilToonXiexeConverter
     {
         return GetFloat(useProperty, 0) != 0
             && GetTexture(textureProperty) != null;
+    }
+
+    private UnityTexture BakeMetallicGlossMapForXiexe(UnityTexture metallicGlossMap, UnityTexture smoothnessTexture)
+    {
+        var referenceTexture = metallicGlossMap as UnityTexture2D
+            ?? smoothnessTexture as UnityTexture2D;
+        var width = referenceTexture?.width ?? 4;
+        var height = referenceTexture?.height ?? 4;
+        UnityTexture2D bakedTexture = null;
+
+        try
+        {
+            var metallicPixels = ReadTexturePixels(metallicGlossMap, width, height, UnityColor.white);
+            var smoothnessPixels = ReadTexturePixels(smoothnessTexture, width, height, UnityColor.white);
+            var outputPixels = new UnityColor[width * height];
+
+            for (var i = 0; i < outputPixels.Length; i++)
+            {
+                outputPixels[i] = new UnityColor(metallicPixels[i].r, 0, 0, smoothnessPixels[i].r);
+            }
+
+            bakedTexture = new UnityTexture2D(width, height, TextureFormat.RGBA32, false, true)
+            {
+                name = "LilToonConverter metallic smoothness map",
+                wrapMode = referenceTexture?.wrapMode ?? TextureWrapMode.Repeat,
+                filterMode = referenceTexture?.filterMode ?? FilterMode.Bilinear,
+                anisoLevel = referenceTexture?.anisoLevel ?? 1,
+            };
+            bakedTexture.SetPixels(outputPixels);
+            bakedTexture.Apply();
+        }
+        catch (Exception exception)
+        {
+            if (bakedTexture != null)
+            {
+                UnityObject.DestroyImmediate(bakedTexture);
+            }
+
+            UnityEngine.Debug.LogWarning($"Could not bake lilToon metallic/smoothness map. {exception.Message}");
+            return metallicGlossMap;
+        }
+
+        return CacheBakedTexture(bakedTexture, referenceTexture, ref AssetCache.MetallicGlossMap);
+    }
+
+    private static UnityColor[] ReadTexturePixels(UnityTexture texture, int width, int height, UnityColor fallback)
+    {
+        if (texture == null)
+        {
+            var fallbackPixels = new UnityColor[width * height];
+            for (var i = 0; i < fallbackPixels.Length; i++)
+            {
+                fallbackPixels[i] = fallback;
+            }
+
+            return fallbackPixels;
+        }
+
+        UnityRenderTexture renderTexture = null;
+        var currentRenderTexture = UnityRenderTexture.active;
+
+        try
+        {
+            renderTexture = UnityRenderTexture.GetTemporary(width, height, 0, UnityRenderTextureFormat.Default, UnityRenderTextureReadWrite.Linear);
+            Graphics.Blit(texture, renderTexture);
+            UnityRenderTexture.active = renderTexture;
+
+            var readableTexture = new UnityTexture2D(width, height, TextureFormat.RGBA32, false, true);
+            readableTexture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            readableTexture.Apply();
+            var pixels = readableTexture.GetPixels();
+            UnityObject.DestroyImmediate(readableTexture);
+            return pixels;
+        }
+        finally
+        {
+            UnityRenderTexture.active = currentRenderTexture;
+            if (renderTexture != null)
+            {
+                UnityRenderTexture.ReleaseTemporary(renderTexture);
+            }
+        }
     }
 
     private UnityTexture BakeEmissionMapWithLilToon(UnityTexture emissionMap, UnityTexture emissionBlendMask, UnityTexture albedoTexture)
