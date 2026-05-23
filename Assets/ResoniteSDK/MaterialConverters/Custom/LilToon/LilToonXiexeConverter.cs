@@ -248,7 +248,7 @@ public class LilToonXiexeConverter
         emissionColor.g *= albedoTint.g;
         emissionColor.b *= albedoTint.b;
         emissionColor = ApplyEmissionFluorescenceApproximation(emissionColor);
-        Xiexe.EmissionColor = emissionColor.ToColorX_Auto();
+        Xiexe.EmissionColor = emissionColor.ToColorX_sRGB();
 
         var emissionMap = GetTexture("_EmissionMap");
         var emissionBlendMask = GetTexture("_EmissionBlendMask");
