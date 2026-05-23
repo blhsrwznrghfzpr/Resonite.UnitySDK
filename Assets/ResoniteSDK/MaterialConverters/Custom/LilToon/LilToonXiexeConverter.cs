@@ -176,7 +176,8 @@ public class LilToonXiexeConverter
         Xiexe.RimColor = rimColor.ToColorX_Auto();
         Xiexe.RimAlbedoTint = GetFloat("_RimMainStrength", 0);
         Xiexe.RimAttenuationEffect = GetFloat("_RimShadowMask", 0.5f);
-        Xiexe.RimIntensity = rimColor.a;
+        // Empirical scale: Xiexe's additive Rim appears much stronger than lilToon's rim blend.
+        Xiexe.RimIntensity = rimColor.a * 0.2f;
 
         var rimShape = GetXiexeRimShape("_RimBorder", "_RimBlur", "_RimFresnelPower");
         Xiexe.RimRange = rimShape.x;
