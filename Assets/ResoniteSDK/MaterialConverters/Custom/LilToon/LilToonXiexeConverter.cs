@@ -30,21 +30,22 @@ public class LilToonXiexeConverter
 
     public IAssetProvider<FrooxEngine.Material> UpdateConversion()
     {
-        var bakedMainTexture = BakeMainTextureWithLilToon();
-        Xiexe.MainTexture = Context.GetITexture2D(bakedMainTexture ?? GetTexture("_MainTex"));
-        Xiexe.Color = GetColor("_Color", UnityColor.white).ToColorX_sRGB();
+        var mainTextureBake = BakeMainTextureWithLilToon();
+        var mainTexture = mainTextureBake.Texture ?? GetTexture("_MainTex");
+        Xiexe.MainTexture = Context.GetITexture2D(mainTexture);
+        Xiexe.Color = mainTextureBake.BakedWithColor ? UnityColor.white.ToColorX_sRGB() : GetColor("_Color", UnityColor.white).ToColorX_sRGB();
         Xiexe.BlendMode = GetBlendMode();
         Xiexe.ZWrite = GetFloat("_ZWrite", 1) > 0 ? ZWrite.On : ZWrite.Off;
         Xiexe.AlphaClip = GetFloat("_Cutoff", 0.5f);
         Xiexe.MainTextureScale = GetTextureScale("_MainTex");
         Xiexe.MainTextureOffset = GetTextureOffset("_MainTex");
-        Xiexe.Saturation = bakedMainTexture != null ? 1 : GetVector("_MainTexHSVG", new Vector4(0, 1, 1, 1)).y;
+        Xiexe.Saturation = mainTextureBake.Texture != null ? 1 : GetVector("_MainTexHSVG", new Vector4(0, 1, 1, 1)).y;
         Xiexe.NormalMap = Context.GetITexture2D(GetTexture("_BumpMap"));
         Xiexe.NormalMapScale = GetTextureScale("_BumpMap");
         Xiexe.NormalMapOffset = GetTextureOffset("_BumpMap");
         Xiexe.NormalScale = GetFloat("_BumpScale", 1);
         UpdateReflections();
-        UpdateEmission(bakedMainTexture ?? GetTexture("_MainTex"));
+        UpdateEmission(mainTexture);
         UpdateRim();
         UpdateMatcap();
         UpdateOcclusion();
@@ -377,30 +378,33 @@ public class LilToonXiexeConverter
         Xiexe.ShadowRimSharpness = rimShadeShape.y;
     }
 
-    private UnityTexture BakeMainTextureWithLilToon()
+    private MainTextureBakeResult BakeMainTextureWithLilToon()
     {
-        var useMain2ndTexture = UsesMainLayer("_UseMain2ndTex", "_Main2ndTex");
-        var useMain3rdTexture = UsesMainLayer("_UseMain3rdTex", "_Main3rdTex");
+        var useMain2ndTexture = UsesMainLayer("_UseMain2ndTex");
+        var useMain3rdTexture = UsesMainLayer("_UseMain3rdTex");
+        var main2ndTexture = GetTexture("_Main2ndTex");
+        var main3rdTexture = GetTexture("_Main3rdTex");
         var main2ndUsesUv0 = GetFloat("_Main2ndTex_UVMode", 0) == 0;
         var main3rdUsesUv0 = GetFloat("_Main3rdTex_UVMode", 0) == 0;
+        var canBakeMain2ndTexture = useMain2ndTexture && (main2ndUsesUv0 || main2ndTexture == null);
+        var canBakeMain3rdTexture = useMain3rdTexture && (main3rdUsesUv0 || main3rdTexture == null);
 
         var shouldBakeMain = GetVector("_MainTexHSVG", new Vector4(0, 1, 1, 1)) != new Vector4(0, 1, 1, 1)
             || GetFloat("_MainGradationStrength", 0) != 0
-            // Non-UV0 2nd/3rd textures cannot be preserved in a single UV0 bake.
-            || (useMain2ndTexture && main2ndUsesUv0)
-            || (useMain3rdTexture && main3rdUsesUv0);
+            || canBakeMain2ndTexture
+            || canBakeMain3rdTexture;
         var shouldBakeAlpha = GetFloat("_AlphaMaskMode", 0) != 0 && GetTexture("_AlphaMask") != null;
 
         if (!shouldBakeMain && !shouldBakeAlpha)
         {
-            return null;
+            return default;
         }
 
         var bakerShader = UnityShader.Find("Hidden/ltsother_baker");
         if (bakerShader == null)
         {
             UnityEngine.Debug.LogWarning("Could not find lilToon main texture baker shader Hidden/ltsother_baker.");
-            return null;
+            return default;
         }
 
         var sourceTexture = GetTexture("_MainTex") ?? UnityTexture2D.whiteTexture;
@@ -413,10 +417,9 @@ public class LilToonXiexeConverter
         {
             bakerMaterial = new UnityMaterial(bakerShader);
             bakerMaterial.CopyPropertiesFromMaterial(Material);
-            if (bakerMaterial.HasProperty("_Color"))
-            {
-                bakerMaterial.SetColor("_Color", UnityColor.white);
-            }
+            SetColorFromSource(bakerMaterial, "_Color", UnityColor.white);
+            SetColorFromSource(bakerMaterial, "_Color2nd", UnityColor.white);
+            SetColorFromSource(bakerMaterial, "_Color3rd", UnityColor.white);
 
             SetFallbackTexture(bakerMaterial, "_MainTex", sourceTexture);
             SetFallbackTexture(bakerMaterial, "_MainGradationTex", UnityTexture2D.whiteTexture);
@@ -427,12 +430,14 @@ public class LilToonXiexeConverter
             SetFallbackTexture(bakerMaterial, "_Main3rdBlendMask", UnityTexture2D.whiteTexture);
             SetFallbackTexture(bakerMaterial, "_AlphaMask", UnityTexture2D.whiteTexture);
 
-            if (useMain2ndTexture && !main2ndUsesUv0)
+            // Non-UV0 2nd/3rd textures cannot be preserved in a single UV0 bake.
+            // Null layer textures still bake as white, matching lilToon's editor baker.
+            if (useMain2ndTexture && !canBakeMain2ndTexture)
             {
                 bakerMaterial.SetFloat("_UseMain2ndTex", 0);
             }
 
-            if (useMain3rdTexture && !main3rdUsesUv0)
+            if (useMain3rdTexture && !canBakeMain3rdTexture)
             {
                 bakerMaterial.SetFloat("_UseMain3rdTex", 0);
             }
@@ -464,7 +469,7 @@ public class LilToonXiexeConverter
             }
 
             UnityEngine.Debug.LogWarning($"Could not bake lilToon main texture. {exception.Message}");
-            return null;
+            return default;
         }
         finally
         {
@@ -476,16 +481,27 @@ public class LilToonXiexeConverter
 
         if (bakedTexture == null)
         {
-            return null;
+            return default;
         }
 
-        return CacheBakedTexture(bakedTexture, sourceTexture2D, ref AssetCache.MainTexture);
+        return new MainTextureBakeResult(CacheBakedTexture(bakedTexture, sourceTexture2D, ref AssetCache.MainTexture), shouldBakeMain);
     }
 
-    private bool UsesMainLayer(string useProperty, string textureProperty)
+    private readonly struct MainTextureBakeResult
     {
-        return GetFloat(useProperty, 0) != 0
-            && GetTexture(textureProperty) != null;
+        public MainTextureBakeResult(UnityTexture texture, bool bakedWithColor)
+        {
+            Texture = texture;
+            BakedWithColor = bakedWithColor;
+        }
+
+        public UnityTexture Texture { get; }
+        public bool BakedWithColor { get; }
+    }
+
+    private bool UsesMainLayer(string useProperty)
+    {
+        return GetFloat(useProperty, 0) != 0;
     }
 
     private UnityTexture BakeMetallicGlossMapForXiexe(UnityTexture metallicGlossMap, UnityTexture smoothnessTexture)
@@ -831,6 +847,14 @@ public class LilToonXiexeConverter
         if (material.HasProperty(property) && material.GetTexture(property) == null)
         {
             material.SetTexture(property, fallback);
+        }
+    }
+
+    private void SetColorFromSource(UnityMaterial material, string property, UnityColor fallback)
+    {
+        if (material.HasProperty(property))
+        {
+            material.SetColor(property, GetColor(property, fallback));
         }
     }
 
