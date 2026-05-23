@@ -702,10 +702,8 @@ public class LilToonXiexeConverter
         {
             const int width = 256;
             const int height = 256;
-            bakerMaterial = new UnityMaterial(Material)
-            {
-                shader = bakerShader,
-            };
+            bakerMaterial = new UnityMaterial(bakerShader);
+            CopyShadowRampBakerProperties(Material, bakerMaterial);
 
             renderTexture = UnityRenderTexture.GetTemporary(width, height, 0, UnityRenderTextureFormat.Default, UnityRenderTextureReadWrite.Default);
             UnityRenderTexture.active = renderTexture;
@@ -748,6 +746,38 @@ public class LilToonXiexeConverter
         return CacheBakedTexture(bakedRamp, null, ref AssetCache.ShadowRampTexture);
     }
 
+    private static void CopyShadowRampBakerProperties(UnityMaterial source, UnityMaterial destination)
+    {
+        CopyFloat(source, destination, "_ShadowStrength");
+        CopyFloat(source, destination, "_ShadowBorder");
+        CopyFloat(source, destination, "_ShadowBlur");
+        CopyFloat(source, destination, "_Shadow2ndBorder");
+        CopyFloat(source, destination, "_Shadow2ndBlur");
+        CopyFloat(source, destination, "_Shadow3rdBorder");
+        CopyFloat(source, destination, "_Shadow3rdBlur");
+        CopyFloat(source, destination, "_ShadowBorderRange");
+        CopyColor(source, destination, "_ShadowColor");
+        CopyColor(source, destination, "_Shadow2ndColor");
+        CopyColor(source, destination, "_Shadow3rdColor");
+        CopyColor(source, destination, "_ShadowBorderColor");
+    }
+
+    private static void CopyFloat(UnityMaterial source, UnityMaterial destination, string propertyName)
+    {
+        if (source.HasProperty(propertyName) && destination.HasProperty(propertyName))
+        {
+            destination.SetFloat(propertyName, source.GetFloat(propertyName));
+        }
+    }
+
+    private static void CopyColor(UnityMaterial source, UnityMaterial destination, string propertyName)
+    {
+        if (source.HasProperty(propertyName) && destination.HasProperty(propertyName))
+        {
+            destination.SetColor(propertyName, source.GetColor(propertyName));
+        }
+    }
+
     private static void ApplyShadowRampMaskGradient(UnityTexture2D ramp)
     {
         var sourcePixels = ramp.GetPixels();
@@ -760,7 +790,9 @@ public class LilToonXiexeConverter
             var mask = height > 1 ? y / (height - 1f) : 1f;
             for (var x = 0; x < width; x++)
             {
-                gradientPixels[x + y * width] = UnityColor.Lerp(UnityColor.white, sourcePixels[x], mask);
+                var color = UnityColor.Lerp(UnityColor.white, sourcePixels[x], mask);
+                color.a = 1;
+                gradientPixels[x + y * width] = color;
             }
         }
 
