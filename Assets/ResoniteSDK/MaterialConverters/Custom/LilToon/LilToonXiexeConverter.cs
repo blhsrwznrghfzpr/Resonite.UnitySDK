@@ -372,8 +372,8 @@ public class LilToonXiexeConverter
 
     private MainTextureBakeResult BakeMainTextureWithLilToon()
     {
-        var useMain2ndTexture = UsesMainLayer("_UseMain2ndTex");
-        var useMain3rdTexture = UsesMainLayer("_UseMain3rdTex");
+        var useMain2ndTexture = GetFloat("_UseMain2ndTex", 0) != 0;
+        var useMain3rdTexture = GetFloat("_UseMain3rdTex", 0) != 0;
         var main2ndTexture = GetTexture("_Main2ndTex");
         var main3rdTexture = GetTexture("_Main3rdTex");
         var main2ndUsesUv0 = GetFloat("_Main2ndTex_UVMode", 0) == 0;
@@ -489,11 +489,6 @@ public class LilToonXiexeConverter
 
         public Texture Texture { get; }
         public bool BakedWithColor { get; }
-    }
-
-    private bool UsesMainLayer(string useProperty)
-    {
-        return GetFloat(useProperty, 0) != 0;
     }
 
     private Texture BakeMetallicGlossMapForXiexe(Texture metallicGlossMap, Texture smoothnessTexture)
