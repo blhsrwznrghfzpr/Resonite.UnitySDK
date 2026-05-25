@@ -16,6 +16,7 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
     int? _anisoLevel;
     bool _uncompressed;
     bool _crunchCompressed;
+    int? _maxSize;
     bool _mipMaps;
     bool _readable;
 
@@ -57,6 +58,13 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
 
         _readable = Source.isReadable;
 
+        var assetPath = AssetDatabase.GetAssetPath(Source);
+
+        if (!string.IsNullOrWhiteSpace(assetPath) && AssetImporter.GetAtPath(assetPath) is TextureImporter textureImporter)
+            _maxSize = textureImporter.maxTextureSize;
+        else
+            _maxSize = null;
+
         return ConvertTexture2D(Source, PostProcessor != null);
     }
 
@@ -96,6 +104,8 @@ public class Texture2DConverter : AssetConverter<StaticTexture2DWrapper, StaticT
         Provider.Data.CrunchCompressed = _crunchCompressed;
 
         Provider.Data.Readable = _readable;
+
+        Provider.Data.MaxSize = _maxSize;
 
         return Provider.CollectData(context);
     }
