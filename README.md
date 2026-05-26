@@ -36,6 +36,9 @@ You can:
 - Expand the SDK or use it as reference implementation for your own custom tooling for other engines
 
 ## Getting started
+> [!TIP]
+> Are you new to Resonite and looking to bring your content over? Register an account with the `UNITYSDK` promo code and you'll get extra storage for first 3 months! 
+
 Video tutorial:
 
 [![Resonite SDK for Unity Editor](https://img.youtube.com/vi/lRGDnu9OeSs/0.jpg)](https://www.youtube.com/watch?v=lRGDnu9OeSs)
