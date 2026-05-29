@@ -28,11 +28,29 @@ public class LilToonXiexeConverter
         Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
         Xiexe.ColorMask = (ColorMask)Material.GetFloat("_ColorMask");
         Xiexe.RenderQueue = Material.renderQueue;
+        UpdateOutline();
         UpdateShadowRamp();
 
         return Xiexe;
     }
 
+    private void UpdateOutline()
+    {
+        if (Material.GetFloat("_UseOutline") == 0 && !Material.shader.name.Contains("Outline", StringComparison.OrdinalIgnoreCase))
+        {
+            Xiexe.Outline = XiexeToonMaterial.OutlineStyle.None;
+            return;
+        }
+
+        Xiexe.Outline = Material.GetFloat("_OutlineEnableLighting") > 0
+            ? XiexeToonMaterial.OutlineStyle.Lit
+            : XiexeToonMaterial.OutlineStyle.Emissive;
+        Xiexe.OutlineWidth = Material.GetFloat("_OutlineWidth");
+        Xiexe.OutlineColor = Material.GetColor("_OutlineColor").ToColorX_Auto();
+        Xiexe.OutlineAlbedoTint = Material.GetFloat("_OutlineLitApplyTex") > 0;
+        Xiexe.OutlineMask = Context.GetITexture2D(Material.GetTexture("_OutlineWidthMask"));
+    }
+ 
     private void UpdateShadowRamp()
     {
         if (Material.GetFloat("_UseShadow") == 0)
