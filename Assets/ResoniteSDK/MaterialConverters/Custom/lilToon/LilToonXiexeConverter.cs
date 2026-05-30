@@ -28,10 +28,28 @@ public class LilToonXiexeConverter
         Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
         Xiexe.ColorMask = (ColorMask)Material.GetFloat("_ColorMask");
         Xiexe.RenderQueue = Material.renderQueue;
+        UpdateOcclusion();
         UpdateOutline();
         UpdateShadowRamp();
 
         return Xiexe;
+    }
+
+    private void UpdateOcclusion()
+    {
+        if (Material.GetFloat("_UseShadow") == 0)
+        {
+            Xiexe.OcclusionColor = Color.black.ToColorX_sRGB();
+            return;
+        }
+
+        Xiexe.OcclusionMap = Context.GetITexture2D(Material.GetTexture("_ShadowBorderMask"));
+        Xiexe.OcclusionMapScale = Material.GetTextureScale("_ShadowBorderMask");
+        Xiexe.OcclusionMapOffset = Material.GetTextureOffset("_ShadowBorderMask");
+
+        var shadowColor = Material.GetColor("_ShadowColor");
+        var occlusionColor = Color.Lerp(Color.white, shadowColor, Material.GetFloat("_ShadowStrength"));
+        Xiexe.OcclusionColor = occlusionColor.ToColorX_Auto();
     }
 
     private void UpdateOutline()
