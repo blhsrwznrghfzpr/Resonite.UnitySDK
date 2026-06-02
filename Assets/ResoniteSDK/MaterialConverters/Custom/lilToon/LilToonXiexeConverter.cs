@@ -64,31 +64,25 @@ public class LilToonXiexeConverter
         var emissionMap = Material.GetTexture("_EmissionMap");
         var emissionBlendMask = Material.GetTexture("_EmissionBlendMask");
         var emissionMapUV = (int)Material.GetFloat("_EmissionMap_UVMode");
+        var emissionMainStrength = Material.GetFloat("_EmissionMainStrength");
 
-        if (emissionMap == null && emissionBlendMask == null)
+        var hasEmissionMap = emissionMap != null;
+        var hasEmissionBlendMask = emissionBlendMask != null;
+        var usesMainTextureAsEmission = emissionMainStrength > 0 && mainTexture != null;
+
+        if (!hasEmissionMap && !hasEmissionBlendMask && !usesMainTextureAsEmission)
         {
             Xiexe.EmissionMap = Context.GetITexture2D(UnityEngine.Texture2D.whiteTexture);
-            Xiexe.EmissionMapScale = Vector2.one;
-            Xiexe.EmissionMapOffset = Vector2.zero;
-            Xiexe.EmissionUV = 0;
-            return;
-        }
-        if (emissionMap == null && emissionBlendMask != null)
-        {
-            Xiexe.EmissionMap = Context.GetITexture2D(emissionBlendMask);
-            Xiexe.EmissionMapScale = Material.GetTextureScale("_EmissionBlendMask");
-            Xiexe.EmissionMapOffset = Material.GetTextureOffset("_EmissionBlendMask");
-            Xiexe.EmissionUV = 0;
             return;
         }
 
-        Xiexe.EmissionMap = Context.GetITexture2D(emissionMap);
-        Xiexe.EmissionMapScale = Material.GetTextureScale("_EmissionMap");
-        Xiexe.EmissionMapOffset = Material.GetTextureOffset("_EmissionMap");
-        Xiexe.EmissionUV = emissionMapUV;
-
-        if (emissionMap != null && (emissionBlendMask == null || emissionMapUV != 0))
+        // If the emission map is not UV0, baking will cause issues, so do not bake.
+        if (hasEmissionMap && emissionMapUV != 0)
         {
+            Xiexe.EmissionMap = Context.GetITexture2D(emissionMap);
+            Xiexe.EmissionMapScale = Material.GetTextureScale("_EmissionMap");
+            Xiexe.EmissionMapOffset = Material.GetTextureOffset("_EmissionMap");
+            Xiexe.EmissionUV = emissionMapUV;
             return;
         }
 
@@ -96,6 +90,20 @@ public class LilToonXiexeConverter
         if (bakerShader == null)
         {
             UnityEngine.Debug.LogWarning("Could not find lilToon texture baker shader Hidden/ltsother_baker.");
+            if (hasEmissionMap)
+            {
+                Xiexe.EmissionMap = Context.GetITexture2D(emissionMap);
+                Xiexe.EmissionMapScale = Material.GetTextureScale("_EmissionMap");
+                Xiexe.EmissionMapOffset = Material.GetTextureOffset("_EmissionMap");
+                Xiexe.EmissionUV = emissionMapUV;
+            }
+            else
+            {
+                Xiexe.EmissionMap = Context.GetITexture2D(emissionBlendMask ?? mainTexture ?? UnityEngine.Texture2D.whiteTexture);
+                Xiexe.EmissionMapScale = Vector2.one;
+                Xiexe.EmissionMapOffset = Vector2.zero;
+                Xiexe.EmissionUV = 0;
+            }
             return;
         }
 
@@ -106,27 +114,40 @@ public class LilToonXiexeConverter
         {
             bakerMaterial = new UnityEngine.Material(bakerShader);
             bakerMaterial.SetColor("_Color", Color.white);
-            bakerMaterial.SetTexture("_MainTex", emissionMap);
-            bakerMaterial.SetTextureScale("_MainTex", Material.GetTextureScale("_EmissionMap"));
-            bakerMaterial.SetTextureOffset("_MainTex", Material.GetTextureOffset("_EmissionMap"));
-            bakerMaterial.SetFloat("_UseMain2ndTex", 1);
-            bakerMaterial.SetColor("_Color2nd", Color.white);
-            bakerMaterial.SetTexture("_Main2ndTex", emissionBlendMask);
-            bakerMaterial.SetTextureScale("_Main2ndTex", Material.GetTextureScale("_EmissionBlendMask"));
-            bakerMaterial.SetTextureOffset("_Main2ndTex", Material.GetTextureOffset("_EmissionBlendMask"));
-            bakerMaterial.SetFloat("_Main2ndTexBlendMode", 3);
-            var emissionMainStrength = Mathf.Clamp01(Material.GetFloat("_EmissionMainStrength"));
-            if (emissionMainStrength > 0 && mainTexture != null)
+            if (hasEmissionMap)
+            {
+                bakerMaterial.SetTexture("_MainTex", emissionMap);
+                bakerMaterial.SetTextureScale("_MainTex", Material.GetTextureScale("_EmissionMap"));
+                bakerMaterial.SetTextureOffset("_MainTex", Material.GetTextureOffset("_EmissionMap"));
+            }
+            else
+            {
+                bakerMaterial.SetTexture("_MainTex", UnityEngine.Texture2D.whiteTexture);
+            }
+            if (hasEmissionBlendMask)
+            {
+                bakerMaterial.SetFloat("_UseMain2ndTex", 1);
+                bakerMaterial.SetColor("_Color2nd", Color.white);
+                bakerMaterial.SetTexture("_Main2ndTex", emissionBlendMask);
+                bakerMaterial.SetTextureScale("_Main2ndTex", Material.GetTextureScale("_EmissionBlendMask"));
+                bakerMaterial.SetTextureOffset("_Main2ndTex", Material.GetTextureOffset("_EmissionBlendMask"));
+                bakerMaterial.SetFloat("_Main2ndTexBlendMode", 3);  // Multiply
+            }
+            if (usesMainTextureAsEmission)
             {
                 bakerMaterial.SetFloat("_UseMain3rdTex", 1);
-                bakerMaterial.SetColor("_Color3rd", new Color(1, 1, 1, emissionMainStrength));
+                bakerMaterial.SetColor("_Color3rd", new Color(1, 1, 1, Mathf.Clamp01(emissionMainStrength)));
                 bakerMaterial.SetTexture("_Main3rdTex", mainTexture);
                 bakerMaterial.SetTextureScale("_Main3rdTex", mainTextureScale);
                 bakerMaterial.SetTextureOffset("_Main3rdTex", mainTextureOffset);
-                bakerMaterial.SetFloat("_Main3rdTexBlendMode", 3);
+                bakerMaterial.SetFloat("_Main3rdTexBlendMode", 3);  // Multiply
             }
 
-            bakedTexture = BakeMaterialToTexture(emissionMap, bakerMaterial, emissionMap.width, emissionMap.height);
+            var sourceTexture2D = emissionMap as UnityEngine.Texture2D
+                ?? emissionBlendMask as UnityEngine.Texture2D
+                ?? mainTexture as UnityEngine.Texture2D
+                ?? UnityEngine.Texture2D.whiteTexture;
+            bakedTexture = BakeMaterialToTexture(sourceTexture2D, bakerMaterial, emissionMap.width, emissionMap.height);
             bakedTexture.name = $"{Material.name}_EmissionMap_Baked";
             bakedTexture.wrapMode = emissionMap.wrapMode;
             bakedTexture.filterMode = emissionMap.filterMode;
