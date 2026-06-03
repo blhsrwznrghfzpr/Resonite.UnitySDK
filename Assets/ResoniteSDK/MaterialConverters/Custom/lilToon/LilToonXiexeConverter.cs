@@ -49,7 +49,7 @@ public class LilToonXiexeConverter
 
         var emissionColor = Material.GetColor("_EmissionColor");
         var emissionFluorescence = Mathf.Clamp01(Material.GetFloat("_EmissionFluorescence"));
-        if (emissionFluorescence != 0)
+        if (emissionFluorescence > 0)
         {
             // lilToon multiplies fluorescence emission by a lighting-dependent
             // invLighting value. Xiexe emission is static, so use the maximum-ish
@@ -59,7 +59,7 @@ public class LilToonXiexeConverter
             emissionColor.g *= fluorescenceScale;
             emissionColor.b *= fluorescenceScale;
         }
-        Xiexe.EmissionColor = emissionColor.ToColorX_sRGB();
+        Xiexe.EmissionColor = emissionColor.ToColorX_Linear();
 
         var emissionMap = Material.GetTexture("_EmissionMap");
         var emissionBlendMask = Material.GetTexture("_EmissionBlendMask");
