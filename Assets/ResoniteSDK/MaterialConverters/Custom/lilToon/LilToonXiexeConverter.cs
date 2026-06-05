@@ -41,6 +41,7 @@ public class LilToonXiexeConverter
         UpdateRenderSettings();
         Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
         UpdateEmission(mainTexture.Texture, mainTexture.Scale, mainTexture.Offset);
+        UpdateMatcap();
         UpdateOcclusion();
         UpdateOutline();
         UpdateShadowRamp();
@@ -402,6 +403,40 @@ public class LilToonXiexeConverter
         Xiexe.EmissionMapScale = Vector2.one;
         Xiexe.EmissionMapOffset = Vector2.zero;
         Xiexe.EmissionUV = 0;
+    }
+
+    private void UpdateMatcap()
+    {
+        // Xiexe only supports additive MatCap and has no equivalent to lilToon's
+        // _MatCapBlendMask. Applying unsupported modes or an unmasked MatCap changes
+        // the look, so only convert additive, unmasked MatCap.
+        if (Material.GetFloat("_UseMatCap") == 0 ||
+            Material.GetFloat("_MatCapBlendMode") != 1 ||
+            Material.GetTexture("_MatCapBlendMask") != null)
+        {
+            Xiexe.Matcap = null;
+            return;
+        }
+
+        Xiexe.Matcap = Context.GetITexture2D(Material.GetTexture("_MatCapTex"), OpacifyProcessor);
+        var matcapColor = Material.GetColor("_MatCapColor");
+        var alpha = matcapColor.a;
+        matcapColor *= Material.GetFloat("_MatCapBlend") * alpha;
+        matcapColor.a = alpha;
+        Xiexe.MatcapTint = matcapColor.ToColorX_sRGB();
+    }
+
+    private static readonly AssetMessagePostProcessor OpacifyProcessor = TexturePostProcessing.ProcessPixels(Opacify);
+
+    private static ResoniteLink.color Opacify(ResoniteLink.color c)
+    {
+        return new ResoniteLink.color()
+        {
+            r = c.r * c.a,
+            g = c.g * c.a,
+            b = c.b * c.a,
+            a = c.a,
+        };
     }
 
     private void UpdateOcclusion()
