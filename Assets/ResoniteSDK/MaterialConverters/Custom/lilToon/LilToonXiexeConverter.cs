@@ -38,10 +38,8 @@ public class LilToonXiexeConverter
     {
         var mainTexture = GetMainTexture();
         UpdateMainTexture(mainTexture);
-        Xiexe.Saturation = 1;
+        UpdateRenderSettings();
         Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
-        Xiexe.ColorMask = (ColorMask)Material.GetFloat("_ColorMask");
-        Xiexe.RenderQueue = Material.renderQueue;
         UpdateEmission(mainTexture.Texture, mainTexture.Scale, mainTexture.Offset);
         UpdateOcclusion();
         UpdateOutline();
@@ -174,8 +172,94 @@ public class LilToonXiexeConverter
         Xiexe.MainTextureScale = mainTextureData.Scale;
         Xiexe.MainTextureOffset = mainTextureData.Offset;
         Xiexe.Color = mainTextureData.Color.ToColorX_sRGB();
+        Xiexe.Saturation = 1;
     }
 
+    private void UpdateRenderSettings()
+    {
+        Xiexe.BlendMode = GetBlendMode();
+        Xiexe.AlphaClip = Material.GetFloat("_Cutoff");
+        Xiexe.ZWrite = Material.GetFloat("_ZWrite") > 0 ? ZWrite.On : ZWrite.Off;
+        Xiexe.Culling = (Culling)(UnityEngine.Rendering.CullMode)Material.GetFloat("_Cull");
+        Xiexe.ColorMask = (ColorMask)Material.GetFloat("_ColorMask");
+        Xiexe.RenderQueue = Material.renderQueue;
+    }
+
+    private BlendMode GetBlendMode()
+    {
+        var shaderName = Material.shader.name;
+
+        if (ContainsAfterLastSeparator(shaderName, "Multi") && Material.HasProperty("_TransparentMode"))
+        {
+            switch ((int)Material.GetFloat("_TransparentMode"))
+            {
+                case 0: // Opaque
+                    return BlendMode.Opaque;
+                case 1: // Cutout
+                case 5: // FurCutout
+                    return BlendMode.Cutout;
+                case 2: // Transparent
+                case 3: // Refraction
+                case 4: // Fur
+                    return BlendMode.Alpha;
+                case 6: // Gem
+                    return BlendMode.Additive;
+            }
+        }
+
+        if (ContainsAfterLastSeparator(shaderName, "Refraction"))
+        {
+            return BlendMode.Alpha;
+        }
+
+        if (ContainsAfterLastSeparator(shaderName, "Cutout"))
+        {
+            return BlendMode.Cutout;
+        }
+
+        if (ContainsAfterLastSeparator(shaderName, "Transparent") ||
+            ContainsAfterLastSeparator(shaderName, "Overlay") ||
+            IsLilToonFurShaderName(shaderName))
+        {
+            return BlendMode.Alpha;
+        }
+
+        if (ContainsAfterLastSeparator(shaderName, "Gem"))
+        {
+            return BlendMode.Additive;
+        }
+
+        return BlendMode.Opaque;
+    }
+
+    private static bool IsLilToonFurShaderName(string shaderName)
+    {
+        if (ContainsAfterLastSeparator(shaderName, "Fur"))
+        {
+            return true;
+        }
+
+        var separatorIndex = shaderName.LastIndexOf('/');
+        if (separatorIndex == -1 || separatorIndex + 1 == shaderName.Length)
+        {
+            return false;
+        }
+
+        var partIndex = shaderName.LastIndexOf("/[Optional] FurOnly/");
+        return partIndex != -1 && partIndex + 19 == separatorIndex;
+    }
+
+    private static bool ContainsAfterLastSeparator(string shaderName, string subName)
+    {
+        var separatorIndex = shaderName.LastIndexOf('/');
+        if (separatorIndex == -1 || separatorIndex + 1 == shaderName.Length)
+        {
+            return false;
+        }
+
+        return shaderName.IndexOf(subName, separatorIndex + 1) != -1;
+    }
+ 
     private void UpdateEmission(Texture mainTexture, Vector2 mainTextureScale, Vector2 mainTextureOffset)
     {
         if (Material.GetFloat("_UseEmission") == 0)
