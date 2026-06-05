@@ -5,6 +5,22 @@ using UnityEditor;
 
 public class LilToonXiexeConverter
 {
+    private struct MainTextureData
+    {
+        public readonly Texture Texture;
+        public readonly Color Color;
+        public readonly Vector2 Scale;
+        public readonly Vector2 Offset;
+
+        public MainTextureData(Texture texture, Color color, Vector2 scale, Vector2 offset)
+        {
+            Texture = texture;
+            Color = color;
+            Scale = scale;
+            Offset = offset;
+        }
+    }
+
     private readonly XiexeToonMaterial Xiexe;
     private readonly UnityEngine.Material Material;
     private readonly IConversionContext Context;
@@ -20,23 +36,144 @@ public class LilToonXiexeConverter
 
     public IAssetProvider<FrooxEngine.Material> UpdateConversion()
     {
-        var mainTexture = Material.mainTexture;
-        var mainTextureScale = Material.mainTextureScale;
-        var mainTextureOffset = Material.mainTextureOffset;
-        Xiexe.MainTexture = Context.GetITexture2D(mainTexture);
-        Xiexe.MainTextureScale = mainTextureScale;
-        Xiexe.MainTextureOffset = mainTextureOffset;
-        Xiexe.Color = Material.GetColor("_Color").ToColorX_sRGB();
+        var mainTexture = GetMainTexture();
+        UpdateMainTexture(mainTexture);
         Xiexe.Saturation = 1;
         Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
         Xiexe.ColorMask = (ColorMask)Material.GetFloat("_ColorMask");
         Xiexe.RenderQueue = Material.renderQueue;
-        UpdateEmission(mainTexture, mainTextureScale, mainTextureOffset);
+        UpdateEmission(mainTexture.Texture, mainTexture.Scale, mainTexture.Offset);
         UpdateOcclusion();
         UpdateOutline();
         UpdateShadowRamp();
 
         return Xiexe;
+    }
+
+    private MainTextureData GetMainTexture()
+    {
+        var defaultData = new MainTextureData(
+            Material.mainTexture,
+            Material.GetColor("_Color"),
+            Material.mainTextureScale,
+            Material.mainTextureOffset);
+
+        var shouldBakeMain = Material.GetVector("_MainTexHSVG") != new Vector4(0, 1, 1, 1)
+            && Material.GetFloat("_MainGradationStrength") != 0;
+        
+        // Non-UV0 2nd/3rd textures cannot be preserved in a single UV0 bake.
+        // Null layer textures still bake as white, matching lilToon's editor baker.
+        var shouldBakeMain2nd = Material.GetFloat("_UseMain2ndTex") != 0
+            && (Material.GetTexture("_Main2ndTex") == null
+                || Material.GetFloat("_Main2ndTex_UVMode") == 0);
+        var shouldBakeMain3rd = Material.GetFloat("_UseMain3rdTex") != 0
+            && (Material.GetTexture("_Main3rdTex") == null
+                || Material.GetFloat("_Main3rdTex_UVMode") == 0);
+
+        var shouldBakeAlpha = Material.GetFloat("_AlphaMaskMode") != 0
+            && Material.GetTexture("_AlphaMask") != null;
+
+        if (!shouldBakeMain && !shouldBakeMain2nd && !shouldBakeMain3rd && !shouldBakeAlpha)
+        {
+            return defaultData;
+        }
+
+        var bakerShader = UnityEngine.Shader.Find("Hidden/ltsother_baker");
+        if (bakerShader == null)
+        {
+            UnityEngine.Debug.LogWarning("Could not find lilToon main texture baker shader Hidden/ltsother_baker.");
+            return defaultData;
+        }
+
+        UnityEngine.Texture2D bakedTexture = null;
+        UnityEngine.Material bakerMaterial = null;
+
+        try
+        {
+            bakerMaterial = new UnityEngine.Material(bakerShader);
+            bakerMaterial.CopyPropertiesFromMaterial(Material);
+
+            if (!shouldBakeMain2nd)
+            {
+                bakerMaterial.SetFloat("_UseMain2ndTex", 0);
+            }
+            if (!shouldBakeMain3rd)
+            {
+                bakerMaterial.SetFloat("_UseMain3rdTex", 0);
+            }
+
+            var sourceTexture2D = Material.mainTexture ?? UnityEngine.Texture2D.whiteTexture;
+            if (shouldBakeMain || shouldBakeMain2nd || shouldBakeMain3rd)
+            {
+                bakedTexture = BakeMaterialToTexture(sourceTexture2D, bakerMaterial);
+                bakedTexture.name = $"{Material.name}_MainTex_Baked";
+            }
+
+            if (shouldBakeAlpha)
+            {
+                var alphaSourceTexture = sourceTexture2D;
+                bakerMaterial.EnableKeyword("_ALPHAMASK");
+                if (bakedTexture != null)
+                {
+                    bakerMaterial.SetTexture("_MainTex", alphaSourceTexture);
+                    bakerMaterial.SetColor("_Color", Color.white);
+                    bakerMaterial.SetTextureScale("_MainTex", Vector2.one);
+                    bakerMaterial.SetTextureOffset("_MainTex", Vector2.zero);
+                    bakerMaterial.SetFloat("_UseMain2ndTex", 0);
+                    bakerMaterial.SetFloat("_UseMain3rdTex", 0);
+                    alphaSourceTexture = bakedTexture;
+                }
+
+                var alphaBakedTexture = BakeMaterialToTexture(alphaSourceTexture, bakerMaterial);
+                alphaBakedTexture.name = $"{Material.name}_MainTex_Baked";
+                if (bakedTexture != null)
+                {
+                    UnityEngine.Object.DestroyImmediate(bakedTexture);
+                }
+                bakedTexture = alphaBakedTexture;
+            }
+        }
+        catch (Exception exception)
+        {
+            if (bakedTexture != null)
+            {
+                UnityEngine.Object.DestroyImmediate(bakedTexture);
+            }
+
+            UnityEngine.Debug.LogWarning($"Could not bake lilToon main texture. {exception.Message}");
+            return defaultData;
+        }
+        finally
+        {
+            if (bakerMaterial != null)
+            {
+                UnityEngine.Object.DestroyImmediate(bakerMaterial);
+            }
+        }
+
+        if (bakedTexture == null)
+        {
+            return defaultData;
+        }
+
+        if (AssetCache.MainTexture != null && AssetCache.MainTexture != bakedTexture && !EditorUtility.IsPersistent(AssetCache.MainTexture))
+        {
+            UnityEngine.Object.DestroyImmediate(AssetCache.MainTexture);
+        }
+
+        AssetCache.MainTexture = bakedTexture;
+        return new MainTextureData(bakedTexture,
+            Color.white,
+            Vector2.one,
+            Vector2.zero);
+    }
+
+    private void UpdateMainTexture(MainTextureData mainTextureData)
+    {
+        Xiexe.MainTexture = Context.GetITexture2D(mainTextureData.Texture);
+        Xiexe.MainTextureScale = mainTextureData.Scale;
+        Xiexe.MainTextureOffset = mainTextureData.Offset;
+        Xiexe.Color = mainTextureData.Color.ToColorX_sRGB();
     }
 
     private void UpdateEmission(Texture mainTexture, Vector2 mainTextureScale, Vector2 mainTextureOffset)
@@ -147,7 +284,7 @@ public class LilToonXiexeConverter
                 ?? emissionBlendMask as UnityEngine.Texture2D
                 ?? mainTexture as UnityEngine.Texture2D
                 ?? UnityEngine.Texture2D.whiteTexture;
-            bakedTexture = BakeMaterialToTexture(sourceTexture2D, bakerMaterial, emissionMap.width, emissionMap.height);
+            bakedTexture = BakeMaterialToTexture(sourceTexture2D, bakerMaterial);
             bakedTexture.name = $"{Material.name}_EmissionMap_Baked";
             bakedTexture.wrapMode = emissionMap.wrapMode;
             bakedTexture.filterMode = emissionMap.filterMode;
@@ -324,7 +461,7 @@ public class LilToonXiexeConverter
         }
     }
 
-    private static UnityEngine.Texture2D BakeMaterialToTexture(Texture sourceTexture, UnityEngine.Material material, int width, int height)
+    private static UnityEngine.Texture2D BakeMaterialToTexture(Texture sourceTexture, UnityEngine.Material material)
     {
         UnityEngine.RenderTexture renderTexture = null;
         UnityEngine.Texture2D bakedTexture = null;
@@ -332,12 +469,12 @@ public class LilToonXiexeConverter
 
         try
         {
-            renderTexture = UnityEngine.RenderTexture.GetTemporary(width, height);
+            renderTexture = UnityEngine.RenderTexture.GetTemporary(sourceTexture.width, sourceTexture.height);
             Graphics.Blit(sourceTexture, renderTexture, material);
             UnityEngine.RenderTexture.active = renderTexture;
 
-            bakedTexture = new UnityEngine.Texture2D(width, height);
-            bakedTexture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            bakedTexture = new UnityEngine.Texture2D(sourceTexture.width, sourceTexture.height);
+            bakedTexture.ReadPixels(new Rect(0, 0, sourceTexture.width, sourceTexture.height), 0, 0);
             bakedTexture.Apply();
 
             return bakedTexture;
