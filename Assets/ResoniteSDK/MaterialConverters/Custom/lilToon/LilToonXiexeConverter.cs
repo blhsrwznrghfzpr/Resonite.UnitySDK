@@ -296,6 +296,10 @@ public class LilToonXiexeConverter
         }
 
         var emissionColor = Material.GetColor("_EmissionColor");
+        var emissionAlpha = emissionColor.a;
+        // lilToon uses color alpha as blend strength; Xiexe emission ignores alpha.
+        emissionColor *= Mathf.Clamp01(Material.GetFloat("_EmissionBlend")) * emissionAlpha;
+        emissionColor.a = emissionAlpha;
         var emissionFluorescence = Mathf.Clamp01(Material.GetFloat("_EmissionFluorescence"));
         if (emissionFluorescence > 0)
         {
@@ -327,7 +331,7 @@ public class LilToonXiexeConverter
         // If the emission map is not UV0, baking will cause issues, so do not bake.
         if (hasEmissionMap && emissionMapUV != 0)
         {
-            Xiexe.EmissionMap = Context.GetITexture2D(emissionMap);
+            Xiexe.EmissionMap = Context.GetITexture2D(emissionMap, OpacifyProcessor);
             Xiexe.EmissionMapScale = Material.GetTextureScale("_EmissionMap");
             Xiexe.EmissionMapOffset = Material.GetTextureOffset("_EmissionMap");
             Xiexe.EmissionUV = emissionMapUV;
@@ -340,7 +344,7 @@ public class LilToonXiexeConverter
             UnityEngine.Debug.LogWarning("Could not find lilToon texture baker shader Hidden/ltsother_baker.");
             if (hasEmissionMap)
             {
-                Xiexe.EmissionMap = Context.GetITexture2D(emissionMap);
+                Xiexe.EmissionMap = Context.GetITexture2D(emissionMap, OpacifyProcessor);
                 Xiexe.EmissionMapScale = Material.GetTextureScale("_EmissionMap");
                 Xiexe.EmissionMapOffset = Material.GetTextureOffset("_EmissionMap");
                 Xiexe.EmissionUV = emissionMapUV;
@@ -397,9 +401,9 @@ public class LilToonXiexeConverter
                 ?? UnityEngine.Texture2D.whiteTexture;
             bakedTexture = BakeMaterialToTexture(sourceTexture2D, bakerMaterial);
             bakedTexture.name = $"{Material.name}_EmissionMap_Baked";
-            bakedTexture.wrapMode = emissionMap.wrapMode;
-            bakedTexture.filterMode = emissionMap.filterMode;
-            bakedTexture.anisoLevel = emissionMap.anisoLevel;
+            bakedTexture.wrapMode = sourceTexture2D.wrapMode;
+            bakedTexture.filterMode = sourceTexture2D.filterMode;
+            bakedTexture.anisoLevel = sourceTexture2D.anisoLevel;
         }
         catch (Exception exception)
         {
@@ -425,7 +429,7 @@ public class LilToonXiexeConverter
         }
 
         AssetCache.EmissionMap = bakedTexture;
-        Xiexe.EmissionMap = Context.GetITexture2D(bakedTexture);
+        Xiexe.EmissionMap = Context.GetITexture2D(bakedTexture, OpacifyProcessor);
         Xiexe.EmissionMapScale = Vector2.one;
         Xiexe.EmissionMapOffset = Vector2.zero;
         Xiexe.EmissionUV = 0;
