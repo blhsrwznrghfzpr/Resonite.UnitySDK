@@ -39,12 +39,13 @@ public class LilToonXiexeConverter
         var mainTexture = GetMainTexture();
         UpdateMainTexture(mainTexture);
         UpdateRenderSettings();
-        Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
+        UpdateNormal();
         UpdateEmission(mainTexture.Texture, mainTexture.Scale, mainTexture.Offset);
         UpdateMatcap();
         UpdateOcclusion();
         UpdateOutline();
         UpdateShadowRamp();
+        Xiexe.ShadowRim = Color.white.ToColorX_sRGB();
 
         return Xiexe;
     }
@@ -261,6 +262,31 @@ public class LilToonXiexeConverter
         return shaderName.IndexOf(subName, separatorIndex + 1) != -1;
     }
  
+    private void UpdateNormal()
+    {
+        // TODO: If 2nd normal map support is added, bake into a single normal map
+        if (Material.GetFloat("_UseBumpMap") != 0)
+        {
+            Xiexe.NormalMap = Context.GetITexture2D(Material.GetTexture("_BumpMap"));
+            Xiexe.NormalMapOffset = Material.GetTextureOffset("_BumpMap");
+            Xiexe.NormalMapScale = Material.GetTextureScale("_BumpMap");
+            Xiexe.NormalScale = Material.GetFloat("_BumpScale");
+            Xiexe.NormalUV = 0;
+            return;
+        }
+        if (Material.GetFloat("_UseBump2ndMap") != 0)
+        {
+            // TODO: _Bump2ndScaleMask is not supported, so the 2nd normal map's strength may differ from lilToon. Consider baking if this causes issues.
+            Xiexe.NormalMap = Context.GetITexture2D(Material.GetTexture("_Bump2ndMap"));
+            Xiexe.NormalMapOffset = Material.GetTextureOffset("_Bump2ndMap");
+            Xiexe.NormalMapScale = Material.GetTextureScale("_Bump2ndMap");
+            Xiexe.NormalScale = Material.GetFloat("_Bump2ndScale");
+            Xiexe.NormalUV = (int)Material.GetFloat("_Bump2ndMap_UVMode");
+            return;
+        }
+        Xiexe.NormalMap = null;
+    }
+
     private void UpdateEmission(Texture mainTexture, Vector2 mainTextureScale, Vector2 mainTextureOffset)
     {
         if (Material.GetFloat("_UseEmission") == 0)
