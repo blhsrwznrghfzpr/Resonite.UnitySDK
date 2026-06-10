@@ -59,7 +59,7 @@ public class LilToonXiexeConverter
             Material.mainTextureOffset);
 
         var shouldBakeMain = Material.GetVector("_MainTexHSVG") != new Vector4(0, 1, 1, 1)
-            && Material.GetFloat("_MainGradationStrength") != 0;
+            || Material.GetFloat("_MainGradationStrength") != 0;
         
         // Non-UV0 2nd/3rd textures cannot be preserved in a single UV0 bake.
         // Null layer textures still bake as white, matching lilToon's editor baker.
