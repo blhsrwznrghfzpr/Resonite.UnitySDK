@@ -473,7 +473,7 @@ public class LilToonXiexeConverter
     {
         if (Material.GetFloat("_UseShadow") == 0)
         {
-            Xiexe.OcclusionColor = Color.black.ToColorX_sRGB();
+            Xiexe.OcclusionMap = null;
             return;
         }
 
@@ -507,6 +507,7 @@ public class LilToonXiexeConverter
     {
         if (Material.GetFloat("_UseShadow") == 0)
         {
+            Xiexe.ShadowRamp = null;
             return;
         }
 
