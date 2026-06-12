@@ -21,6 +21,22 @@ public class LilToonXiexeConverter
         }
     }
 
+    private struct EmissionMapData
+    {
+        public readonly Texture Texture;
+        public readonly Vector2 Scale;
+        public readonly Vector2 Offset;
+        public readonly int UV;
+
+        public EmissionMapData(Texture texture, Vector2 scale, Vector2 offset, int uv)
+        {
+            Texture = texture;
+            Scale = scale;
+            Offset = offset;
+            UV = uv;
+        }
+    }
+
     private readonly XiexeToonMaterial Xiexe;
     private readonly UnityEngine.Material Material;
     private readonly IConversionContext Context;
@@ -76,6 +92,15 @@ public class LilToonXiexeConverter
         if (!shouldBakeMain && !shouldBakeMain2nd && !shouldBakeMain3rd && !shouldBakeAlpha)
         {
             return defaultData;
+        }
+
+        var bakeHash = GetMainTextureBakeHash(shouldBakeMain, shouldBakeMain2nd, shouldBakeMain3rd, shouldBakeAlpha);
+        if (AssetCache.MainTexture != null && AssetCache.MainTextureBakeHash == bakeHash)
+        {
+            return new MainTextureData(AssetCache.MainTexture,
+                Color.white,
+                Vector2.one,
+                Vector2.zero);
         }
 
         var bakerShader = UnityEngine.Shader.Find("Hidden/ltsother_baker");
@@ -162,6 +187,7 @@ public class LilToonXiexeConverter
         }
 
         AssetCache.MainTexture = bakedTexture;
+        AssetCache.MainTextureBakeHash = bakeHash;
         return new MainTextureData(bakedTexture,
             Color.white,
             Vector2.one,
@@ -313,6 +339,24 @@ public class LilToonXiexeConverter
         }
         Xiexe.EmissionColor = emissionColor.ToColorX_Linear();
 
+        var emissionMap = GetEmissionMap(mainTexture, mainTextureScale, mainTextureOffset);
+        Xiexe.EmissionMap = Context.GetITexture2D(emissionMap.Texture, OpacifyProcessor);
+        Xiexe.EmissionMapScale = emissionMap.Scale;
+        Xiexe.EmissionMapOffset = emissionMap.Offset;
+        Xiexe.EmissionUV = emissionMap.UV;
+    }
+
+    private EmissionMapData GetEmissionMap(Texture mainTexture, Vector2 mainTextureScale, Vector2 mainTextureOffset)
+    {
+        var bakeHash = GetEmissionMapBakeHash(
+            mainTexture,
+            mainTextureScale,
+            mainTextureOffset);
+        if (AssetCache.EmissionMap != null && AssetCache.EmissionMapBakeHash == bakeHash)
+        {
+            return new EmissionMapData(AssetCache.EmissionMap, Vector2.one, Vector2.zero, 0);
+        }
+
         var emissionMap = Material.GetTexture("_EmissionMap");
         var emissionBlendMask = Material.GetTexture("_EmissionBlendMask");
         var emissionMapUV = (int)Material.GetFloat("_EmissionMap_UVMode");
@@ -322,41 +366,34 @@ public class LilToonXiexeConverter
         var hasEmissionBlendMask = emissionBlendMask != null;
         var usesMainTextureAsEmission = emissionMainStrength > 0 && mainTexture != null;
 
+        var fallbackData = hasEmissionMap
+            ? new EmissionMapData(
+                emissionMap,
+                Material.GetTextureScale("_EmissionMap"),
+                Material.GetTextureOffset("_EmissionMap"),
+                emissionMapUV)
+            : new EmissionMapData(
+                emissionBlendMask ?? mainTexture ?? UnityEngine.Texture2D.whiteTexture,
+                Vector2.one,
+                Vector2.zero,
+                0);
+
         if (!hasEmissionMap && !hasEmissionBlendMask && !usesMainTextureAsEmission)
         {
-            Xiexe.EmissionMap = Context.GetITexture2D(UnityEngine.Texture2D.whiteTexture);
-            return;
+            return fallbackData;
         }
 
         // If the emission map is not UV0, baking will cause issues, so do not bake.
         if (hasEmissionMap && emissionMapUV != 0)
         {
-            Xiexe.EmissionMap = Context.GetITexture2D(emissionMap, OpacifyProcessor);
-            Xiexe.EmissionMapScale = Material.GetTextureScale("_EmissionMap");
-            Xiexe.EmissionMapOffset = Material.GetTextureOffset("_EmissionMap");
-            Xiexe.EmissionUV = emissionMapUV;
-            return;
+            return fallbackData;
         }
 
         var bakerShader = UnityEngine.Shader.Find("Hidden/ltsother_baker");
         if (bakerShader == null)
         {
             UnityEngine.Debug.LogWarning("Could not find lilToon texture baker shader Hidden/ltsother_baker.");
-            if (hasEmissionMap)
-            {
-                Xiexe.EmissionMap = Context.GetITexture2D(emissionMap, OpacifyProcessor);
-                Xiexe.EmissionMapScale = Material.GetTextureScale("_EmissionMap");
-                Xiexe.EmissionMapOffset = Material.GetTextureOffset("_EmissionMap");
-                Xiexe.EmissionUV = emissionMapUV;
-            }
-            else
-            {
-                Xiexe.EmissionMap = Context.GetITexture2D(emissionBlendMask ?? mainTexture ?? UnityEngine.Texture2D.whiteTexture);
-                Xiexe.EmissionMapScale = Vector2.one;
-                Xiexe.EmissionMapOffset = Vector2.zero;
-                Xiexe.EmissionUV = 0;
-            }
-            return;
+            return fallbackData;
         }
 
         UnityEngine.Texture2D bakedTexture = null;
@@ -413,7 +450,7 @@ public class LilToonXiexeConverter
             }
 
             UnityEngine.Debug.LogWarning($"Could not bake lilToon emission map. {exception.Message}");
-            return;
+            return fallbackData;
         }
         finally
         {
@@ -429,10 +466,8 @@ public class LilToonXiexeConverter
         }
 
         AssetCache.EmissionMap = bakedTexture;
-        Xiexe.EmissionMap = Context.GetITexture2D(bakedTexture, OpacifyProcessor);
-        Xiexe.EmissionMapScale = Vector2.one;
-        Xiexe.EmissionMapOffset = Vector2.zero;
-        Xiexe.EmissionUV = 0;
+        AssetCache.EmissionMapBakeHash = bakeHash;
+        return new EmissionMapData(bakedTexture, Vector2.one, Vector2.zero, 0);
     }
 
     private void UpdateMatcap()
@@ -511,11 +546,38 @@ public class LilToonXiexeConverter
             return;
         }
 
+        // XiexeToon's null ShadowRampMask behaves differently from lilToon's null
+        // _ShadowStrengthMask, which means no shadow strength mask. Preserve that with white.
+        if (Material.GetTexture("_ShadowStrengthMask") == null)
+        {
+            Xiexe.ShadowRampMask = Context.GetITexture2D(UnityEngine.Texture2D.whiteTexture);
+            Xiexe.ShadowRampMaskScale = Vector2.one;
+            Xiexe.ShadowRampMaskOffset = Vector2.zero;
+        }
+        else
+        {
+            Xiexe.ShadowRampMask = Context.GetITexture2D(Material.GetTexture("_ShadowStrengthMask"));
+            Xiexe.ShadowRampMaskScale = Material.GetTextureScale("_ShadowStrengthMask");
+            Xiexe.ShadowRampMaskOffset = Material.GetTextureOffset("_ShadowStrengthMask");
+        }
+
+        var shadowRamp = GetShadowRamp();
+        Xiexe.ShadowRamp = Context.GetITexture2D(shadowRamp);
+    }
+
+    private UnityEngine.Texture2D GetShadowRamp()
+    {
+        var bakeHash = GetShadowRampBakeHash();
+        if (AssetCache.ShadowRampTexture != null && AssetCache.ShadowRampBakeHash == bakeHash)
+        {
+            return AssetCache.ShadowRampTexture;
+        }
+
         var bakerShader = UnityEngine.Shader.Find("Hidden/ltsother_bakeramp");
         if (bakerShader == null)
         {
             UnityEngine.Debug.LogWarning("Could not find lilToon shadow ramp baker shader Hidden/ltsother_bakeramp.");
-            return;
+            return null;
         }
 
         UnityEngine.Material bakerMaterial = null;
@@ -570,7 +632,7 @@ public class LilToonXiexeConverter
             }
 
             UnityEngine.Debug.LogWarning($"Could not bake lilToon shadow ramp. {exception.Message}");
-            return;
+            return null;
         }
         finally
         {
@@ -592,23 +654,129 @@ public class LilToonXiexeConverter
         }
 
         AssetCache.ShadowRampTexture = bakedRamp;
+        AssetCache.ShadowRampBakeHash = bakeHash;
+        return bakedRamp;
+    }
 
-        Xiexe.ShadowRamp = Context.GetITexture2D(bakedRamp);
-        // XiexeToon's null ShadowRampMask behaves differently from lilToon's null
-        // _ShadowStrengthMask, which means no shadow strength mask. Preserve that with white.
-        if (Material.GetTexture("_ShadowStrengthMask") == null)
+    private Hash128 GetMainTextureBakeHash(bool shouldBakeMain, bool shouldBakeMain2nd, bool shouldBakeMain3rd, bool shouldBakeAlpha)
+    {
+        var hash = new LilToonAssetCache.BakeHash();
+        hash.Add(shouldBakeMain);
+        hash.Add(shouldBakeMain2nd);
+        hash.Add(shouldBakeMain3rd);
+        hash.Add(shouldBakeAlpha);
+        hash.Add(Material.mainTexture);
+
+        if (shouldBakeMain || shouldBakeMain2nd || shouldBakeMain3rd)
         {
-            Xiexe.ShadowRampMask = Context.GetITexture2D(UnityEngine.Texture2D.whiteTexture);
-            Xiexe.ShadowRampMaskScale = Vector2.one;
-            Xiexe.ShadowRampMaskOffset = Vector2.zero;
-            return;
+            hash.Add(Material.mainTextureScale);
+            hash.Add(Material.mainTextureOffset);
+            hash.Add(Material.GetColor("_Color"));
+            hash.Add(Material.GetVector("_MainTexHSVG"));
+            hash.Add(Material.GetFloat("_MainGradationStrength"));
+            hash.Add(Material.GetTexture("_MainGradationTex"));
+            hash.Add(Material.GetTextureScale("_MainGradationTex"));
+            hash.Add(Material.GetTextureOffset("_MainGradationTex"));
+            hash.Add(Material.GetTexture("_MainColorAdjustMask"));
+            hash.Add(Material.GetTextureScale("_MainColorAdjustMask"));
+            hash.Add(Material.GetTextureOffset("_MainColorAdjustMask"));
         }
-        else
+
+        if (shouldBakeMain2nd)
         {
-            Xiexe.ShadowRampMask = Context.GetITexture2D(Material.GetTexture("_ShadowStrengthMask"));
-            Xiexe.ShadowRampMaskScale = Material.GetTextureScale("_ShadowStrengthMask");
-            Xiexe.ShadowRampMaskOffset = Material.GetTextureOffset("_ShadowStrengthMask");
+            AddMainLayerBakeHash(ref hash, "2nd");
         }
+        if (shouldBakeMain3rd)
+        {
+            AddMainLayerBakeHash(ref hash, "3rd");
+        }
+        if (shouldBakeAlpha)
+        {
+            hash.Add(Material.GetFloat("_AlphaMaskMode"));
+            hash.Add(Material.GetTexture("_AlphaMask"));
+            hash.Add(Material.GetTextureScale("_AlphaMask"));
+            hash.Add(Material.GetTextureOffset("_AlphaMask"));
+            hash.Add(Material.GetFloat("_AlphaMaskScale"));
+            hash.Add(Material.GetFloat("_AlphaMaskValue"));
+        }
+        return hash.Value;
+    }
+
+    private void AddMainLayerBakeHash(ref LilToonAssetCache.BakeHash hash, string suffix)
+    {
+        var prefix = $"_Main{suffix}";
+        hash.Add(Material.GetFloat($"_UseMain{suffix}Tex"));
+        hash.Add(Material.GetColor($"_Color{suffix}"));
+        hash.Add(Material.GetTexture($"{prefix}Tex"));
+        hash.Add(Material.GetTextureScale($"{prefix}Tex"));
+        hash.Add(Material.GetTextureOffset($"{prefix}Tex"));
+        hash.Add(Material.GetFloat($"{prefix}Tex_UVMode"));
+        hash.Add(Material.GetFloat($"{prefix}TexAngle"));
+        hash.Add(Material.GetVector($"{prefix}TexDecalAnimation"));
+        hash.Add(Material.GetVector($"{prefix}TexDecalSubParam"));
+        hash.Add(Material.GetFloat($"{prefix}TexIsDecal"));
+        hash.Add(Material.GetFloat($"{prefix}TexIsLeftOnly"));
+        hash.Add(Material.GetFloat($"{prefix}TexIsRightOnly"));
+        hash.Add(Material.GetFloat($"{prefix}TexShouldCopy"));
+        hash.Add(Material.GetFloat($"{prefix}TexShouldFlipMirror"));
+        hash.Add(Material.GetFloat($"{prefix}TexShouldFlipCopy"));
+        hash.Add(Material.GetFloat($"{prefix}TexIsMSDF"));
+        hash.Add(Material.GetTexture($"{prefix}BlendMask"));
+        hash.Add(Material.GetTextureScale($"{prefix}BlendMask"));
+        hash.Add(Material.GetTextureOffset($"{prefix}BlendMask"));
+        hash.Add(Material.GetFloat($"{prefix}TexBlendMode"));
+    }
+
+    private Hash128 GetEmissionMapBakeHash(
+        Texture mainTexture,
+        Vector2 mainTextureScale,
+        Vector2 mainTextureOffset)
+    {
+        var emissionMap = Material.GetTexture("_EmissionMap");
+        var emissionBlendMask = Material.GetTexture("_EmissionBlendMask");
+        var usesMainTextureAsEmission = Material.GetFloat("_EmissionMainStrength") > 0 && mainTexture != null;
+        var hash = new LilToonAssetCache.BakeHash();
+        hash.Add(emissionMap != null);
+        hash.Add(emissionBlendMask != null);
+        hash.Add(usesMainTextureAsEmission);
+        if (emissionMap != null)
+        {
+            hash.Add(Material.GetTexture("_EmissionMap"));
+            hash.Add(Material.GetTextureScale("_EmissionMap"));
+            hash.Add(Material.GetTextureOffset("_EmissionMap"));
+        }
+        if (emissionBlendMask != null)
+        {
+            hash.Add(Material.GetTexture("_EmissionBlendMask"));
+            hash.Add(Material.GetTextureScale("_EmissionBlendMask"));
+            hash.Add(Material.GetTextureOffset("_EmissionBlendMask"));
+        }
+        if (usesMainTextureAsEmission)
+        {
+            hash.Add(Material.GetFloat("_EmissionMainStrength"));
+            hash.Add(mainTexture);
+            hash.Add(mainTextureScale);
+            hash.Add(mainTextureOffset);
+        }
+        return hash.Value;
+    }
+
+    private Hash128 GetShadowRampBakeHash()
+    {
+        var hash = new LilToonAssetCache.BakeHash();
+        hash.Add(Material.GetFloat("_ShadowStrength"));
+        hash.Add(Material.GetColor("_ShadowColor"));
+        hash.Add(Material.GetFloat("_ShadowBorder"));
+        hash.Add(Material.GetFloat("_ShadowBlur"));
+        hash.Add(Material.GetColor("_Shadow2ndColor"));
+        hash.Add(Material.GetFloat("_Shadow2ndBorder"));
+        hash.Add(Material.GetFloat("_Shadow2ndBlur"));
+        hash.Add(Material.GetColor("_Shadow3rdColor"));
+        hash.Add(Material.GetFloat("_Shadow3rdBorder"));
+        hash.Add(Material.GetFloat("_Shadow3rdBlur"));
+        hash.Add(Material.GetColor("_ShadowBorderColor"));
+        hash.Add(Material.GetFloat("_ShadowBorderRange"));
+        return hash.Value;
     }
 
     private static UnityEngine.Texture2D BakeMaterialToTexture(Texture sourceTexture, UnityEngine.Material material)
