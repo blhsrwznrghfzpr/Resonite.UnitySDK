@@ -744,6 +744,7 @@ public class LilToonXiexeConverter
             hash.Add(Material.GetTexture("_EmissionMap"));
             hash.Add(Material.GetTextureScale("_EmissionMap"));
             hash.Add(Material.GetTextureOffset("_EmissionMap"));
+            hash.Add(Material.GetFloat("_EmissionMap_UVMode"));
         }
         if (emissionBlendMask != null)
         {
