@@ -88,8 +88,9 @@ public class LilToonXiexeConverter
 
         var shouldBakeAlpha = Material.GetFloat("_AlphaMaskMode") != 0
             && Material.GetTexture("_AlphaMask") != null;
+        var shouldBakeMainColor = shouldBakeMain || shouldBakeMain2nd || shouldBakeMain3rd;
 
-        if (!shouldBakeMain && !shouldBakeMain2nd && !shouldBakeMain3rd && !shouldBakeAlpha)
+        if (!shouldBakeMainColor && !shouldBakeAlpha)
         {
             return defaultData;
         }
@@ -98,7 +99,7 @@ public class LilToonXiexeConverter
         if (AssetCache.MainTexture != null && AssetCache.MainTextureBakeHash == bakeHash)
         {
             return new MainTextureData(AssetCache.MainTexture,
-                Color.white,
+                shouldBakeMainColor ? Color.white : defaultData.Color,
                 Vector2.one,
                 Vector2.zero);
         }
@@ -128,7 +129,7 @@ public class LilToonXiexeConverter
             }
 
             var sourceTexture2D = Material.mainTexture ?? UnityEngine.Texture2D.whiteTexture;
-            if (shouldBakeMain || shouldBakeMain2nd || shouldBakeMain3rd)
+            if (shouldBakeMainColor)
             {
                 bakedTexture = BakeMaterialToTexture(sourceTexture2D, bakerMaterial);
                 bakedTexture.name = $"{Material.name}_MainTex_Baked";
@@ -189,7 +190,7 @@ public class LilToonXiexeConverter
         AssetCache.MainTexture = bakedTexture;
         AssetCache.MainTextureBakeHash = bakeHash;
         return new MainTextureData(bakedTexture,
-            Color.white,
+            shouldBakeMainColor ? Color.white : defaultData.Color,
             Vector2.one,
             Vector2.zero);
     }
