@@ -103,13 +103,17 @@ public static class MToon10XiexeConverter
     private static void UpdateRim(FrooxEngine.XiexeToonMaterial xiexe, UnityEngine.Material material)
     {
         var rimColor = material.GetColor("_RimColor");
+        var fresnelPower = Mathf.Max(material.GetFloat("_RimFresnelPower"), 0.001f);
+        var halfIntensityPoint = Mathf.Pow(0.5f, 1 / fresnelPower);
+        var halfIntensitySlope = fresnelPower * Mathf.Pow(0.5f, (fresnelPower - 1) / fresnelPower);
+
         xiexe.RimColor = rimColor.ToColorX_sRGB();
         xiexe.RimAlbedoTint = 0;
         xiexe.RimAttenuationEffect = material.GetFloat("_RimLightingMix");
         xiexe.RimIntensity = rimColor.maxColorComponent;
-        xiexe.RimRange = 1 / Mathf.Max(material.GetFloat("_RimFresnelPower"), 0.001f);
-        xiexe.RimThreshold = material.GetFloat("_RimLift");
-        xiexe.RimSharpness = 0.5f;
+        xiexe.RimRange = Mathf.Clamp01(halfIntensityPoint - material.GetFloat("_RimLift"));
+        xiexe.RimThreshold = 0;
+        xiexe.RimSharpness = Mathf.Clamp(0.75f / halfIntensitySlope, 0.01f, 1);
     }
 
     private static void UpdateOutline(FrooxEngine.XiexeToonMaterial xiexe, UnityEngine.Material material, IConversionContext context)
