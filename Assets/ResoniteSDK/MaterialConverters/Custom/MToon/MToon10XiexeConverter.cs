@@ -1,4 +1,5 @@
 using FrooxEngine;
+using ResoniteLink;
 using UnityEngine;
 
 public static class MToon10XiexeConverter
@@ -9,6 +10,9 @@ public static class MToon10XiexeConverter
     private const int OutlineWidthModeNone = 0;
     private const int OutlineWidthModeWorld = 1;
     private const int OutlineWidthModeScreen = 2;
+
+    private static readonly AssetMessagePostProcessor OutlineMaskProcessor =
+        TexturePostProcessing.ProcessPixels(ConvertOutlineMask);
 
     public static IAssetProvider<FrooxEngine.Material> UpdateConversion(
         FrooxEngine.XiexeToonMaterial xiexe,
@@ -110,7 +114,8 @@ public static class MToon10XiexeConverter
 
     private static void UpdateOutline(FrooxEngine.XiexeToonMaterial xiexe, UnityEngine.Material material, IConversionContext context)
     {
-        if (GetOutlineWidthMode(material) == OutlineWidthModeNone ||
+        var outlineWidthMode = GetOutlineWidthMode(material);
+        if (outlineWidthMode == OutlineWidthModeNone ||
             material.GetFloat("_OutlineWidth") <= 0)
         {
             xiexe.Outline = XiexeToonMaterial.OutlineStyle.None;
@@ -130,10 +135,29 @@ public static class MToon10XiexeConverter
             xiexe.Outline = XiexeToonMaterial.OutlineStyle.Emissive;
         }
 
-        xiexe.OutlineWidth = material.GetFloat("_OutlineWidth");
+        // Xiexe extrudes by OutlineWidth * 0.01. Multiplying MToon 1.0's
+        // outline factor by 100 preserves world width exactly at model scale 1
+        // and gives screen-coordinate outlines a practical object-space
+        // approximation at typical avatar viewing distances.
+        xiexe.OutlineWidth = Mathf.Clamp(material.GetFloat("_OutlineWidth") * 100, 0, 5);
+
         xiexe.OutlineColor = material.GetColor("_OutlineColor").ToColorX_sRGB();
         xiexe.OutlineAlbedoTint = material.GetFloat("_OutlineLightingMix") >= 0.5f;
-        xiexe.OutlineMask = context.GetITexture2D(material.GetTexture("_OutlineWidthTex"));
+        xiexe.OutlineMask = context.GetITexture2D(material.GetTexture("_OutlineWidthTex"), OutlineMaskProcessor);
+    }
+
+    private static color ConvertOutlineMask(color c)
+    {
+        // MToon 1.0 packs shading shift, outline width, and UV animation mask into
+        // the R, G, and B channels of a shared parameter map. Xiexe samples its
+        // standalone outline mask from R, so copy MToon's G value into RGB.
+        return new color
+        {
+            r = c.g,
+            g = c.g,
+            b = c.g,
+            a = c.a,
+        };
     }
 
     private static int GetOutlineWidthMode(UnityEngine.Material material)

@@ -111,7 +111,8 @@ public static class MToonXiexeConverter
 
     private static void UpdateOutline(FrooxEngine.XiexeToonMaterial xiexe, UnityEngine.Material material, IConversionContext context)
     {
-        if (GetOutlineWidthMode(material) == OutlineWidthModeNone ||
+        var outlineWidthMode = GetOutlineWidthMode(material);
+        if (outlineWidthMode == OutlineWidthModeNone ||
             material.GetFloat("_OutlineWidth") <= 0)
         {
             xiexe.Outline = XiexeToonMaterial.OutlineStyle.None;
@@ -122,18 +123,31 @@ public static class MToonXiexeConverter
             return;
         }
 
-        if (material.GetFloat("_OutlineColorMode") > 0 || material.GetFloat("_OutlineLightingMix") >= 0.5f)
+        if (material.GetFloat("_OutlineColorMode") > 0 && material.GetFloat("_OutlineLightingMix") >= 0.5f)
         {
             xiexe.Outline = XiexeToonMaterial.OutlineStyle.Lit;
+            xiexe.OutlineAlbedoTint = true;
         }
         else
         {
             xiexe.Outline = XiexeToonMaterial.OutlineStyle.Emissive;
+            xiexe.OutlineAlbedoTint = false;
         }
 
-        xiexe.OutlineWidth = material.GetFloat("_OutlineWidth");
-        xiexe.OutlineColor = material.GetColor("_OutlineColor").ToColorX_Linear();
-        xiexe.OutlineAlbedoTint = material.GetFloat("_OutlineLightingMix") >= 0.5f;
+        var outlineWidth = material.GetFloat("_OutlineWidth");
+        if (outlineWidthMode == OutlineWidthModeScreen)
+        {
+            // UniVRM migrates legacy screen width to the VRM 1.0 screen-height
+            // ratio with width * 0.01 * 0.5. Xiexe has no screen-space outline,
+            // so retain the corresponding half-width damping as an approximation.
+            xiexe.OutlineWidth = Mathf.Clamp(outlineWidth * 0.5f, 0, 5);
+        }
+        else
+        {
+            xiexe.OutlineWidth = Mathf.Clamp(outlineWidth, 0, 5);
+        }
+
+        xiexe.OutlineColor = material.GetColor("_OutlineColor").ToColorX_sRGB();
         xiexe.OutlineMask = context.GetITexture2D(material.GetTexture("_OutlineWidthTexture"));
     }
 
